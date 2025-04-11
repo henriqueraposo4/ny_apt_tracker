@@ -280,23 +280,48 @@
     }
 
     // Update the Neighborhood filter options based on existing listings.
-    function updateNeighborhoodFilterOptions() {
-      let select = document.getElementById("filterNeighborhood");
-      let neighborhoods = new Set();
-      listings.forEach(listing => {
-        if (listing.neighborhood && listing.neighborhood.trim() !== "") {
-          neighborhoods.add(listing.neighborhood.trim());
-        }
-      });
-      // Clear and add "All" option.
-      select.innerHTML = '<option value="All">All</option>';
-      neighborhoods.forEach(n => {
-        let option = document.createElement("option");
-        option.value = n;
-        option.textContent = n;
-        select.appendChild(option);
-      });
+function updateNeighborhoodFilterOptions() {
+  let select = document.getElementById("filterNeighborhood");
+  let neighborhoods = new Set();
+  listings.forEach(listing => {
+    if (listing.neighborhood && listing.neighborhood.trim() !== "") {
+      neighborhoods.add(listing.neighborhood.trim());
     }
+  });
+  // Clear and add "All" option.
+  select.innerHTML = '<option value="All">All</option>';
+  neighborhoods.forEach(n => {
+    let option = document.createElement("option");
+    option.value = n;
+    option.textContent = n;
+    select.appendChild(option);
+  });
+}
+
+// Build an array of objects {item, idx} for filtering, using trimmed lower-case neighborhood values.
+function getFilteredListings() {
+  let arr = listings.map((item, idx) => ({ item, idx }));
+  let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
+  if (selectedNeighborhood !== "all") {
+    arr = arr.filter(obj => {
+      let itemNeighborhood = obj.item.neighborhood ? obj.item.neighborhood.trim().toLowerCase() : "";
+      return itemNeighborhood === selectedNeighborhood;
+    });
+  }
+  let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
+  let selectedAmenities = [];
+  amenityCheckboxes.forEach(cb => {
+    if (cb.checked) selectedAmenities.push(cb.value.trim().toLowerCase());
+  });
+  if (selectedAmenities.length > 0) {
+    arr = arr.filter(obj => {
+      let listAmenities = obj.item.amenities.split(',')
+        .map(a => a.trim().toLowerCase());
+      return selectedAmenities.every(am => listAmenities.includes(am));
+    });
+  }
+  return arr;
+}
 
     // --- DISPLAY FUNCTIONS ---
 
