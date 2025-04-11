@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NYC Apartment Finder</title>
+  <style>
+    /* Basic Reset and Styles */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+    }
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      margin: 20px;
+    }
+    .form-container {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    input[type="url"] {
+      width: 300px;
+      padding: 8px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    input[type="submit"] {
+      padding: 8px 16px;
+      background: #4CAF50;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+    th {
+      background: #f2f2f2;
+    }
+    .footer {
+      text-align: center;
+      padding: 10px;
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NYC Apartment Finder</h1>
+    <p>Helping you decide where to live in New York City.</p>
+  </header>
+  <div class="container">
+    <!-- URL Submission Form -->
+    <div class="form-container">
+      <form id="apartmentForm">
+        <label for="apartmentUrl">Apartment Listing URL:</label>
+        <input type="url" id="apartmentUrl" name="apartmentUrl" placeholder="Enter listing URL" required>
+        <input type="submit" value="Add Listing">
+      </form>
+    </div>
+    <!-- Table to Display Apartment Details -->
+    <div class="table-container">
+      <table id="listingsTable">
+        <thead>
+          <tr>
+            <th>Price</th>
+            <th>Location</th>
+            <th>Distance from Work</th>
+            <th>Bedrooms</th>
+            <th>Amenities</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamic rows will be injected here later -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer class="footer">
+    <p>&copy; 2025 NYC Apartment Finder</p>
+  </footer>
+  <script>
+    // Placeholder for handling form submission.
+    // Future implementation will extract data from the URL and update the table.
+    document.getElementById('apartmentForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      alert('Form submitted! Dynamic functionality not implemented yet.');
+    });
+  </script>
+</body>
+</html>
