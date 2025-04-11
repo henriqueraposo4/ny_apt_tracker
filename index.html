@@ -19,6 +19,10 @@
     .container {
       margin: 20px;
     }
+    /* Sort controls styling */
+    #sortControls {
+      margin-bottom: 10px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -69,6 +73,18 @@
     <p>Helping you decide where to live in New York City.</p>
   </header>
   <div class="container">
+
+    <!-- Sort Controls -->
+    <div id="sortControls">
+      Sort by: 
+      <select id="sortCriteria">
+        <option value="price">Price</option>
+        <option value="distanceToWorkX">Distance to GS</option>
+        <option value="distanceToWorkY">Distance to BTG</option>
+      </select>
+      <button id="sortBtn">Sort</button>
+    </div>
+
     <table id="listingsTable">
       <thead>
         <tr>
@@ -125,17 +141,17 @@
     <p>&copy; 2025 NYC Apartment Finder</p>
   </footer>
   <script>
-    // Updated target addresses
+    // Updated target addresses.
     const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
     const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
 
-    // Pre-defined amenity options
+    // Pre-defined amenity options.
     const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Pool"];
 
-    // Global array to hold listing objects
+    // Global array to hold listing objects.
     let listings = [];
 
-    // Load listings from localStorage if available
+    // Load listings from localStorage if available.
     function loadListings() {
       let saved = localStorage.getItem('apartmentListings');
       if (saved) {
@@ -147,7 +163,7 @@
       }
     }
 
-    // Save listings to localStorage
+    // Save listings to localStorage.
     function saveListings() {
       localStorage.setItem('apartmentListings', JSON.stringify(listings));
     }
@@ -156,6 +172,17 @@
     function buildGoogleMapsLink(origin, destination) {
       return "https://www.google.com/maps/dir/" +
              encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
+    }
+
+    // Helper: Returns a sortable numeric value from a field.
+    // If the value starts with "http", then return Infinity (so auto-generated links are sorted to the bottom),
+    // otherwise try to parse a floating-point number.
+    function getSortableValue(value) {
+      if (value.trim().toLowerCase().startsWith("http")) {
+        return Infinity;
+      }
+      let num = parseFloat(value.replace(/[^0-9.]/g, ""));
+      return isNaN(num) ? 0 : num;
     }
 
     // Create a table cell that displays a distance value.
@@ -203,13 +230,13 @@
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
 
-      // For Distance columns, use the custom helper
+      // For Distance columns, use the custom helper.
       tr.appendChild(createDistanceCell(listing.distanceToWorkX));
       tr.appendChild(createDistanceCell(listing.distanceToWorkY));
 
       tr.appendChild(createTextCell(listing.amenities));
 
-      // Original URL as clickable link
+      // Original URL as clickable link.
       let originalUrlCell = document.createElement('td');
       let linkURL = document.createElement('a');
       linkURL.href = listing.originalUrl;
@@ -220,7 +247,7 @@
 
       tr.appendChild(createTextCell(listing.notes));
 
-      // Actions cell with Edit and Delete buttons
+      // Actions cell with Edit and Delete buttons.
       let actionCell = document.createElement('td');
       let editBtn = document.createElement('button');
       editBtn.textContent = 'Edit';
@@ -239,21 +266,19 @@
         }
       });
       actionCell.appendChild(deleteBtn);
-
       tr.appendChild(actionCell);
+
       return tr;
     }
 
     // Refresh the entire table (keeping the new listing row intact).
     function refreshTable() {
       const tbody = document.querySelector('#listingsTable tbody');
-      // Remove all rows except the new listing row.
       Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
         if (tr.id !== 'newListingRow') {
           tr.remove();
         }
       });
-      // Append each listing row.
       listings.forEach((listing, index) => {
         let row = createRow(listing, index);
         tbody.appendChild(row);
@@ -314,7 +339,7 @@
       saveListings();
       refreshTable();
 
-      // Clear the new listing row.
+      // Clear input fields.
       document.getElementById('newPrice').value = '';
       document.getElementById('newLocation').value = '';
       document.getElementById('newNeighborhood').value = '';
@@ -330,13 +355,12 @@
       let listing = listings[index];
       row.innerHTML = '';
 
-      // Create individual edit cells.
       let priceCell = createInputCell(listing.price);
       let locationCell = createInputCell(listing.location);
       let neighborhoodCell = createInputCell(listing.neighborhood);
       let bathroomsCell = createInputCell(listing.bathrooms, 'number');
       let bedroomsCell = createInputCell(listing.bedrooms, 'number');
-      // For Distance cells, show an input with the current value.
+      // For Distance cells, show inputs with their current values.
       let distanceGSCell = createInputCell(listing.distanceToWorkX);
       let distanceBTGCell = createInputCell(listing.distanceToWorkY);
 
@@ -348,7 +372,7 @@
       row.appendChild(distanceGSCell);
       row.appendChild(distanceBTGCell);
 
-      // Amenities cell with checkboxes.
+      // Create Amenities cell with checkboxes.
       let amenitiesTd = document.createElement('td');
       amenityOptions.forEach(option => {
         let label = document.createElement('label');
@@ -366,7 +390,6 @@
       });
       row.appendChild(amenitiesTd);
 
-      // Original URL and Notes cells.
       let originalUrlCell = createInputCell(listing.originalUrl, 'url');
       let notesCell = createInputCell(listing.notes);
       row.appendChild(originalUrlCell);
@@ -389,7 +412,6 @@
           originalUrl: originalUrlCell.querySelector('input').value.trim() || 'N/A',
           notes: notesCell.querySelector('input').value.trim() || ''
         };
-        // Get the selected amenities.
         let checkboxes = amenitiesTd.querySelectorAll('input[type="checkbox"]');
         let selected = [];
         checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
@@ -419,6 +441,25 @@
       actionCell.appendChild(deleteBtn);
       row.appendChild(actionCell);
     }
+
+    // Sorting functionality.
+    document.getElementById('sortBtn').addEventListener('click', function() {
+      let criteria = document.getElementById('sortCriteria').value;
+      listings.sort((a, b) => {
+        let valA, valB;
+        if (criteria === 'price') {
+          // Remove non-numeric characters and parse price.
+          valA = parseFloat(a.price.replace(/[^0-9.]/g, "")) || 0;
+          valB = parseFloat(b.price.replace(/[^0-9.]/g, "")) || 0;
+        } else if (criteria === 'distanceToWorkX' || criteria === 'distanceToWorkY') {
+          // Use the helper to get a numeric value for sorting.
+          valA = getSortableValue(a[criteria]);
+          valB = getSortableValue(b[criteria]);
+        }
+        return valA - valB;
+      });
+      refreshTable();
+    });
 
     document.getElementById('addListingBtn').addEventListener('click', addNewListing);
 
