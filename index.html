@@ -99,7 +99,6 @@
       </select>
       Filter by Amenities:
       <span id="filterAmenities">
-        <!-- Pre-defined amenities checkboxes -->
         <label>
           <input type="checkbox" value="Laundry Room">Laundry Room
         </label>
@@ -221,8 +220,7 @@
     }
 
     // Create a table cell that displays a distance value.
-    // If the value is a URL (starts with "http"), display "View Route" as a clickable link.
-    // Otherwise, display the value as plain text.
+    // If the value is a URL, display "View Route" as a clickable link; otherwise display the value.
     function createDistanceCell(value) {
       let td = document.createElement('td');
       if (value.trim().toLowerCase().startsWith("http")) {
@@ -256,72 +254,56 @@
 
     // --- FILTERING FUNCTIONS ---
 
-    // Build an array of objects {item, idx} for each listing.
-    // Then filter based on neighborhood and amenities.
+    // Update the Neighborhood filter options based on existing listings,
+    // preserving the currently selected option.
+    function updateNeighborhoodFilterOptions() {
+      let select = document.getElementById("filterNeighborhood");
+      let currentSelection = select.value;  // Save the current selection.
+      let neighborhoods = new Set();
+      listings.forEach(listing => {
+        if (listing.neighborhood && listing.neighborhood.trim() !== "") {
+          neighborhoods.add(listing.neighborhood.trim());
+        }
+      });
+      // Clear and add "All" option.
+      select.innerHTML = '<option value="All">All</option>';
+      neighborhoods.forEach(n => {
+        let option = document.createElement("option");
+        option.value = n;
+        option.textContent = n;
+        select.appendChild(option);
+      });
+      // Restore the previous selection if it exists.
+      if (neighborhoods.has(currentSelection)) {
+        select.value = currentSelection;
+      } else {
+        select.value = "All";
+      }
+    }
+
+    // Build an array of objects {item, idx} for each listing and filter.
     function getFilteredListings() {
       let arr = listings.map((item, idx) => ({ item, idx }));
-      let selectedNeighborhood = document.getElementById('filterNeighborhood').value;
-      if (selectedNeighborhood !== "All") {
-        arr = arr.filter(obj =>
-          obj.item.neighborhood.toLowerCase() === selectedNeighborhood.toLowerCase());
+      let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
+      if (selectedNeighborhood !== "all") {
+        arr = arr.filter(obj => {
+          let listingNeighborhood = obj.item.neighborhood ? obj.item.neighborhood.trim().toLowerCase() : "";
+          return listingNeighborhood === selectedNeighborhood;
+        });
       }
       let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
       let selectedAmenities = [];
       amenityCheckboxes.forEach(cb => {
-        if (cb.checked) selectedAmenities.push(cb.value);
+        if (cb.checked) selectedAmenities.push(cb.value.trim().toLowerCase());
       });
       if (selectedAmenities.length > 0) {
         arr = arr.filter(obj => {
           let listAmenities = obj.item.amenities.split(',').map(a => a.trim().toLowerCase());
-          return selectedAmenities.every(am => listAmenities.includes(am.toLowerCase()));
+          return selectedAmenities.every(am => listAmenities.includes(am));
         });
       }
       return arr;
     }
-
-    // Update the Neighborhood filter options based on existing listings.
-function updateNeighborhoodFilterOptions() {
-  let select = document.getElementById("filterNeighborhood");
-  let neighborhoods = new Set();
-  listings.forEach(listing => {
-    if (listing.neighborhood && listing.neighborhood.trim() !== "") {
-      neighborhoods.add(listing.neighborhood.trim());
-    }
-  });
-  // Clear and add "All" option.
-  select.innerHTML = '<option value="All">All</option>';
-  neighborhoods.forEach(n => {
-    let option = document.createElement("option");
-    option.value = n;
-    option.textContent = n;
-    select.appendChild(option);
-  });
-}
-
-// Build an array of objects {item, idx} for filtering, using trimmed lower-case neighborhood values.
-function getFilteredListings() {
-  let arr = listings.map((item, idx) => ({ item, idx }));
-  let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
-  if (selectedNeighborhood !== "all") {
-    arr = arr.filter(obj => {
-      let itemNeighborhood = obj.item.neighborhood ? obj.item.neighborhood.trim().toLowerCase() : "";
-      return itemNeighborhood === selectedNeighborhood;
-    });
-  }
-  let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
-  let selectedAmenities = [];
-  amenityCheckboxes.forEach(cb => {
-    if (cb.checked) selectedAmenities.push(cb.value.trim().toLowerCase());
-  });
-  if (selectedAmenities.length > 0) {
-    arr = arr.filter(obj => {
-      let listAmenities = obj.item.amenities.split(',')
-        .map(a => a.trim().toLowerCase());
-      return selectedAmenities.every(am => listAmenities.includes(am));
-    });
-  }
-  return arr;
-}
 
     // --- DISPLAY FUNCTIONS ---
 
@@ -336,7 +318,7 @@ function getFilteredListings() {
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
 
-      // Distance cells using custom helper.
+      // For Distance columns, use the custom helper.
       tr.appendChild(createDistanceCell(listing.distanceToWorkX));
       tr.appendChild(createDistanceCell(listing.distanceToWorkY));
 
@@ -377,7 +359,7 @@ function getFilteredListings() {
       return tr;
     }
 
-    // Refresh the table display. Applies filters and then iterates over the filtered list.
+    // Refresh the table display: update filter options, apply filters, then display.
     function refreshTable() {
       updateNeighborhoodFilterOptions();
       const tbody = document.querySelector('#listingsTable tbody');
@@ -387,7 +369,6 @@ function getFilteredListings() {
           tr.remove();
         }
       });
-      // Get filtered listings with original indices.
       let filtered = getFilteredListings();
       filtered.forEach(obj => {
         let row = createRow(obj.item, obj.idx);
@@ -407,7 +388,7 @@ function getFilteredListings() {
       return selected.join(', ');
     }
 
-    // Add new listing by gathering values, generating travel links, and saving.
+    // Add a new listing.
     function addNewListing() {
       let price = document.getElementById('newPrice').value.trim();
       let location = document.getElementById('newLocation').value.trim();
