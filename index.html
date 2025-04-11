@@ -30,7 +30,6 @@
       margin-right: 10px;
       display: inline-block;
     }
-    /* New max filter fields styling */
     .maxFilter {
       margin-right: 10px;
     }
@@ -95,7 +94,7 @@
       <button id="sortBtn">Sort</button>
     </div>
     
-    <!-- Filter Controls -->
+    <!-- Filter Controls (Bathrooms and Bedrooms filters removed) -->
     <div id="filterControls">
       Filter by Neighborhood: 
       <select id="filterNeighborhood">
@@ -119,10 +118,6 @@
           <input type="checkbox" value="Pool">Pool
         </label>
       </span>
-      Filter by Bathrooms: 
-      <input type="number" id="filterBathrooms" min="0" placeholder="Any" class="maxFilter">
-      Filter by Bedrooms: 
-      <input type="number" id="filterBedrooms" min="0" placeholder="Any" class="maxFilter">
       Filter by Max Price: 
       <input type="number" id="filterMaxPrice" min="0" placeholder="Any" class="maxFilter">
       Filter by Max Distance to GS:
@@ -234,7 +229,7 @@
     }
 
     // Create a table cell that displays a distance value.
-    // If the value is a URL, display "View Route" as a clickable link; otherwise, display the value.
+    // If the value is a URL, display "View Route" as a clickable link; otherwise display the value.
     function createDistanceCell(value) {
       let td = document.createElement('td');
       if (value.trim().toLowerCase().startsWith("http")) {
@@ -319,18 +314,6 @@
           return selectedAmenities.every(am => listAmenities.includes(am));
         });
       }
-      // Bathrooms Filter.
-      let bathroomsFilter = document.getElementById('filterBathrooms').value.trim();
-      if (bathroomsFilter !== "") {
-        let bf = parseInt(bathroomsFilter);
-        arr = arr.filter(obj => parseInt(obj.item.bathrooms) === bf);
-      }
-      // Bedrooms Filter.
-      let bedroomsFilter = document.getElementById('filterBedrooms').value.trim();
-      if (bedroomsFilter !== "") {
-        let bb = parseInt(bedroomsFilter);
-        arr = arr.filter(obj => parseInt(obj.item.bedrooms) === bb);
-      }
       // Maximum Price Filter.
       let maxPriceFilter = document.getElementById('filterMaxPrice').value.trim();
       if (maxPriceFilter !== "") {
@@ -345,7 +328,6 @@
       if (maxDistanceGSFilter !== "") {
         let maxDistanceGS = parseFloat(maxDistanceGSFilter);
         arr = arr.filter(obj => {
-          // If auto-generated (URL), skip filtering.
           if (obj.item.distanceToWorkX.trim().toLowerCase().startsWith("http")) {
             return true;
           }
@@ -381,7 +363,7 @@
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
 
-      // For Distance columns.
+      // Distance cells.
       tr.appendChild(createDistanceCell(listing.distanceToWorkX));
       tr.appendChild(createDistanceCell(listing.distanceToWorkY));
 
@@ -494,7 +476,7 @@
       saveListings();
       refreshTable();
 
-      // Clear inputs.
+      // Clear input fields.
       document.getElementById('newPrice').value = '';
       document.getElementById('newLocation').value = '';
       document.getElementById('newNeighborhood').value = '';
@@ -618,8 +600,6 @@
 
     document.getElementById('clearFiltersBtn').addEventListener('click', function() {
       document.getElementById('filterNeighborhood').value = "All";
-      document.getElementById('filterBathrooms').value = "";
-      document.getElementById('filterBedrooms').value = "";
       document.getElementById('filterMaxPrice').value = "";
       document.getElementById('filterMaxDistanceGS').value = "";
       document.getElementById('filterMaxDistanceBTG').value = "";
