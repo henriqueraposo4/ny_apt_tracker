@@ -30,8 +30,25 @@
       margin-right: 10px;
       display: inline-block;
     }
-    .maxFilter {
-      margin-right: 10px;
+    /* New container for maximum filters styling */
+    .max-filter-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .max-filter-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .max-filter-item label {
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+    input[type="number"] {
+      width: 150px;
+      padding: 4px;
     }
     table {
       width: 100%;
@@ -48,7 +65,6 @@
       background: #f2f2f2;
     }
     input[type="text"],
-    input[type="number"],
     input[type="url"] {
       width: 100%;
       padding: 6px;
@@ -94,36 +110,49 @@
       <button id="sortBtn">Sort</button>
     </div>
     
-    <!-- Filter Controls (Bathrooms and Bedrooms filters removed) -->
+    <!-- Filter Controls -->
     <div id="filterControls">
-      Filter by Neighborhood: 
-      <select id="filterNeighborhood">
-        <option value="All">All</option>
-      </select>
-      Filter by Amenities:
-      <span id="filterAmenities">
-        <label>
-          <input type="checkbox" value="Laundry Room">Laundry Room
-        </label>
-        <label>
-          <input type="checkbox" value="AC">AC
-        </label>
-        <label>
-          <input type="checkbox" value="Gym">Gym
-        </label>
-        <label>
-          <input type="checkbox" value="Game room">Game room
-        </label>
-        <label>
-          <input type="checkbox" value="Pool">Pool
-        </label>
-      </span>
-      Filter by Max Price: 
-      <input type="number" id="filterMaxPrice" min="0" placeholder="Any" class="maxFilter">
-      Filter by Max Distance to GS:
-      <input type="number" id="filterMaxDistanceGS" min="0" placeholder="Any" class="maxFilter">
-      Filter by Max Distance to BTG:
-      <input type="number" id="filterMaxDistanceBTG" min="0" placeholder="Any" class="maxFilter">
+      <div>
+        Filter by Neighborhood: 
+        <select id="filterNeighborhood">
+          <option value="All">All</option>
+        </select>
+      </div>
+      <div>
+        Filter by Amenities:
+        <span id="filterAmenities">
+          <label>
+            <input type="checkbox" value="Laundry Room">Laundry Room
+          </label>
+          <label>
+            <input type="checkbox" value="AC">AC
+          </label>
+          <label>
+            <input type="checkbox" value="Gym">Gym
+          </label>
+          <label>
+            <input type="checkbox" value="Game room">Game room
+          </label>
+          <label>
+            <input type="checkbox" value="Pool">Pool
+          </label>
+        </span>
+      </div>
+      <!-- New maximum filter container -->
+      <div class="max-filter-container">
+        <div class="max-filter-item">
+          <label for="filterMaxPrice">Max Price:</label>
+          <input type="number" id="filterMaxPrice" min="0" placeholder="Any">
+        </div>
+        <div class="max-filter-item">
+          <label for="filterMaxDistanceGS">Max Distance to GS:</label>
+          <input type="number" id="filterMaxDistanceGS" min="0" placeholder="Any">
+        </div>
+        <div class="max-filter-item">
+          <label for="filterMaxDistanceBTG">Max Distance to BTG:</label>
+          <input type="number" id="filterMaxDistanceBTG" min="0" placeholder="Any">
+        </div>
+      </div>
       <button id="filterBtn">Apply Filters</button>
       <button id="clearFiltersBtn">Clear Filters</button>
     </div>
@@ -218,8 +247,7 @@
     }
 
     // Helper: Returns a sortable numeric value from a field.
-    // If the value starts with "http", return Infinity (so auto-generated links are sorted to the bottom),
-    // otherwise try to parse a floating-point number.
+    // If the value starts with "http", return Infinity (so auto-generated links are sorted to the bottom).
     function getSortableValue(value) {
       if (value.trim().toLowerCase().startsWith("http")) {
         return Infinity;
