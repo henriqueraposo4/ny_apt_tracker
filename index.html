@@ -19,25 +19,6 @@
     .container {
       margin: 20px;
     }
-    .form-container {
-      margin-bottom: 30px;
-      text-align: center;
-    }
-    input[type="url"] {
-      width: 300px;
-      padding: 8px;
-      margin-right: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    input[type="submit"] {
-      padding: 8px 16px;
-      background: #4CAF50;
-      border: none;
-      border-radius: 4px;
-      color: white;
-      cursor: pointer;
-    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -50,6 +31,22 @@
     }
     th {
       background: #f2f2f2;
+    }
+    input[type="text"],
+    input[type="number"],
+    input[type="url"] {
+      width: 100%;
+      padding: 6px;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 6px 12px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 2px;
     }
     .footer {
       text-align: center;
@@ -66,45 +63,227 @@
     <p>Helping you decide where to live in New York City.</p>
   </header>
   <div class="container">
-    <!-- URL Submission Form -->
-    <div class="form-container">
-      <form id="apartmentForm">
-        <label for="apartmentUrl">Apartment Listing URL:</label>
-        <input type="url" id="apartmentUrl" name="apartmentUrl" placeholder="Enter listing URL" required>
-        <input type="submit" value="Add Listing">
-      </form>
-    </div>
-    <!-- Table to Display Apartment Details -->
-    <div class="table-container">
-      <table id="listingsTable">
-        <thead>
-          <tr>
-            <th>Price</th>
-            <th>Location</th>
-            <th>Neighborhood</th>
-            <th>Bathrooms</th>
-            <th>Bedrooms</th>
-            <th>Distance to Work X</th>
-            <th>Distance to Work Y</th>
-            <th>Amenities</th>
-            <th>Original URL</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Dynamic rows will be injected here later -->
-        </tbody>
-      </table>
-    </div>
+    <table id="listingsTable">
+      <thead>
+        <tr>
+          <th>Price</th>
+          <th>Location</th>
+          <th>Neighborhood</th>
+          <th>Bathrooms</th>
+          <th>Bedrooms</th>
+          <th>Distance to Work X</th>
+          <th>Distance to Work Y</th>
+          <th>Amenities</th>
+          <th>Original URL</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- New Listing Input Row -->
+        <tr id="newListingRow">
+          <td><input type="text" id="newPrice" placeholder="Price"></td>
+          <td><input type="text" id="newLocation" placeholder="Location"></td>
+          <td><input type="text" id="newNeighborhood" placeholder="Neighborhood"></td>
+          <td><input type="number" id="newBathrooms" placeholder="Bathrooms"></td>
+          <td><input type="number" id="newBedrooms" placeholder="Bedrooms"></td>
+          <td><input type="text" id="newDistanceX" placeholder="Distance to Work X"></td>
+          <td><input type="text" id="newDistanceY" placeholder="Distance to Work Y"></td>
+          <td><input type="text" id="newAmenities" placeholder="Amenities"></td>
+          <td><input type="url" id="newOriginalUrl" placeholder="Original URL"></td>
+          <td><button id="addListingBtn">Add</button></td>
+        </tr>
+        <!-- Existing listings will be inserted here -->
+      </tbody>
+    </table>
   </div>
   <footer class="footer">
     <p>&copy; 2025 NYC Apartment Finder</p>
   </footer>
   <script>
-    // Placeholder for handling form submission.
-    // Future implementation will extract data from the URL and update the table.
-    document.getElementById('apartmentForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-      alert('Form submitted! Dynamic functionality not implemented yet.');
+    // Global array to hold listing objects
+    let listings = [];
+
+    // Load listings from localStorage if available
+    function loadListings() {
+      let saved = localStorage.getItem('apartmentListings');
+      if (saved) {
+        try {
+          listings = JSON.parse(saved);
+        } catch(e) {
+          listings = [];
+        }
+      }
+    }
+
+    // Save listings to localStorage
+    function saveListings() {
+      localStorage.setItem('apartmentListings', JSON.stringify(listings));
+    }
+
+    // Create a table row to display a listing (non-editable mode)
+    function createRow(listing, index) {
+      let tr = document.createElement('tr');
+      tr.setAttribute('data-index', index);
+
+      function createCell(content) {
+        let td = document.createElement('td');
+        td.innerHTML = content;
+        return td;
+      }
+
+      tr.appendChild(createCell(listing.price));
+      tr.appendChild(createCell(listing.location));
+      tr.appendChild(createCell(listing.neighborhood));
+      tr.appendChild(createCell(listing.bathrooms));
+      tr.appendChild(createCell(listing.bedrooms));
+      tr.appendChild(createCell(listing.distanceToWorkX));
+      tr.appendChild(createCell(listing.distanceToWorkY));
+      tr.appendChild(createCell(listing.amenities));
+
+      // For URL, create a clickable link
+      let urlCell = document.createElement('td');
+      let link = document.createElement('a');
+      link.href = listing.originalUrl;
+      link.textContent = listing.originalUrl;
+      link.target = '_blank';
+      urlCell.appendChild(link);
+      tr.appendChild(urlCell);
+
+      // Actions cell: Edit button
+      let actionCell = document.createElement('td');
+      let editBtn = document.createElement('button');
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', function() {
+        enableEditing(tr, index);
+      });
+      actionCell.appendChild(editBtn);
+      tr.appendChild(actionCell);
+
+      return tr;
+    }
+
+    // Refresh table display by removing old rows and re-displaying from the listings array.
+    function refreshTable() {
+      const tbody = document.querySelector('#listingsTable tbody');
+      // Remove all rows except the new listing row (identified by id)
+      Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+        if (tr.id !== 'newListingRow') {
+          tr.remove();
+        }
+      });
+      // Add rows for each listing in the array
+      listings.forEach((listing, index) => {
+        let row = createRow(listing, index);
+        tbody.appendChild(row);
+      });
+    }
+
+    // Add new listing using the values from the input row.
+    function addNewListing() {
+      let price = document.getElementById('newPrice').value.trim();
+      let location = document.getElementById('newLocation').value.trim();
+      let neighborhood = document.getElementById('newNeighborhood').value.trim();
+      let bathrooms = document.getElementById('newBathrooms').value.trim();
+      let bedrooms = document.getElementById('newBedrooms').value.trim();
+      let distanceX = document.getElementById('newDistanceX').value.trim();
+      let distanceY = document.getElementById('newDistanceY').value.trim();
+      let amenities = document.getElementById('newAmenities').value.trim();
+      let originalUrl = document.getElementById('newOriginalUrl').value.trim();
+      
+      if (!price && !location && !neighborhood) {
+        alert("Please fill in at least one of Price, Location, or Neighborhood.");
+        return;
+      }
+      
+      let newListing = {
+        price: price || 'N/A',
+        location: location || 'N/A',
+        neighborhood: neighborhood || 'N/A',
+        bathrooms: bathrooms || 0,
+        bedrooms: bedrooms || 0,
+        distanceToWorkX: distanceX || 'N/A',
+        distanceToWorkY: distanceY || 'N/A',
+        amenities: amenities || 'N/A',
+        originalUrl: originalUrl || 'N/A'
+      };
+      listings.push(newListing);
+      saveListings();
+      refreshTable();
+      // Clear input fields for the new row.
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newLocation').value = '';
+      document.getElementById('newNeighborhood').value = '';
+      document.getElementById('newBathrooms').value = '';
+      document.getElementById('newBedrooms').value = '';
+      document.getElementById('newDistanceX').value = '';
+      document.getElementById('newDistanceY').value = '';
+      document.getElementById('newAmenities').value = '';
+      document.getElementById('newOriginalUrl').value = '';
+    }
+
+    // Enable editing on an existing row.
+    function enableEditing(row, index) {
+      let listing = listings[index];
+      row.innerHTML = '';
+      
+      // Helper to create a cell with an input field.
+      function createInputCell(value, type = 'text') {
+        let td = document.createElement('td');
+        let input = document.createElement('input');
+        input.type = type;
+        input.value = value;
+        td.appendChild(input);
+        return td;
+      }
+      
+      row.appendChild(createInputCell(listing.price));
+      row.appendChild(createInputCell(listing.location));
+      row.appendChild(createInputCell(listing.neighborhood));
+      row.appendChild(createInputCell(listing.bathrooms, 'number'));
+      row.appendChild(createInputCell(listing.bedrooms, 'number'));
+      row.appendChild(createInputCell(listing.distanceToWorkX));
+      row.appendChild(createInputCell(listing.distanceToWorkY));
+      row.appendChild(createInputCell(listing.amenities));
+      row.appendChild(createInputCell(listing.originalUrl, 'url'));
+      
+      // Actions cell with Save and Cancel buttons.
+      let actionCell = document.createElement('td');
+      let saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Save';
+      saveBtn.addEventListener('click', function() {
+        let inputs = row.querySelectorAll('input');
+        let updatedListing = {
+          price: inputs[0].value.trim() || 'N/A',
+          location: inputs[1].value.trim() || 'N/A',
+          neighborhood: inputs[2].value.trim() || 'N/A',
+          bathrooms: inputs[3].value.trim() || 0,
+          bedrooms: inputs[4].value.trim() || 0,
+          distanceToWorkX: inputs[5].value.trim() || 'N/A',
+          distanceToWorkY: inputs[6].value.trim() || 'N/A',
+          amenities: inputs[7].value.trim() || 'N/A',
+          originalUrl: inputs[8].value.trim() || 'N/A'
+        };
+        listings[index] = updatedListing;
+        saveListings();
+        refreshTable();
+      });
+      
+      let cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', refreshTable);
+      
+      actionCell.appendChild(saveBtn);
+      actionCell.appendChild(cancelBtn);
+      row.appendChild(actionCell);
+    }
+
+    // Set event listener for the Add button.
+    document.getElementById('addListingBtn').addEventListener('click', addNewListing);
+
+    // On page load, load any saved listings and refresh the table.
+    window.addEventListener('load', function() {
+      loadListings();
+      refreshTable();
     });
   </script>
 </body>
