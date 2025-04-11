@@ -77,8 +77,8 @@
           <th>Neighborhood</th>
           <th>Bathrooms</th>
           <th>Bedrooms</th>
-          <th>Distance to Work X</th>
-          <th>Distance to Work Y</th>
+          <th>Distance to GS</th>
+          <th>Distance to BTG</th>
           <th>Amenities</th>
           <th>Original URL</th>
           <th>Notes</th>
@@ -125,9 +125,9 @@
     <p>&copy; 2025 NYC Apartment Finder</p>
   </footer>
   <script>
-    // Pre-defined target addresses (update as desired)
-    const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY 10282";
-    const workAddressY = "YOUR_TARGET_ADDRESS_Y";  // Replace with your desired target address
+    // Update pre-defined target addresses.
+    const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
+    const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
 
     // Global array to hold listing objects
     let listings = [];
@@ -173,7 +173,7 @@
       tr.appendChild(createCell(listing.bathrooms));
       tr.appendChild(createCell(listing.bedrooms));
 
-      // Distance to Work X as clickable link:
+      // Distance to GS as clickable link:
       let distanceXCell = document.createElement('td');
       let linkX = document.createElement('a');
       linkX.href = listing.distanceToWorkX;
@@ -182,7 +182,7 @@
       distanceXCell.appendChild(linkX);
       tr.appendChild(distanceXCell);
 
-      // Distance to Work Y as clickable link:
+      // Distance to BTG as clickable link:
       let distanceYCell = document.createElement('td');
       let linkY = document.createElement('a');
       linkY.href = listing.distanceToWorkY;
@@ -229,15 +229,16 @@
       return tr;
     }
 
-    // Refresh table display by clearing all rows except the new listing row and then
-    // re-displaying each listing.
+    // Refresh table display by removing old rows and re-displaying from the listings array.
     function refreshTable() {
       const tbody = document.querySelector('#listingsTable tbody');
+      // Remove all rows except the new listing row (identified by id)
       Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
         if (tr.id !== 'newListingRow') {
           tr.remove();
         }
       });
+      // Add rows for each listing in the array
       listings.forEach((listing, index) => {
         let row = createRow(listing, index);
         tbody.appendChild(row);
@@ -271,7 +272,7 @@
         return;
       }
       
-      // Generate the Google Maps links using the user's location and the pre-defined work addresses.
+      // Generate the Google Maps links using the user's location and the pre-defined target addresses.
       const linkX = buildGoogleMapsLink(location, workAddressX);
       const linkY = buildGoogleMapsLink(location, workAddressY);
       
