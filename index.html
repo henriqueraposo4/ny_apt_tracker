@@ -19,9 +19,16 @@
     .container {
       margin: 20px;
     }
-    /* Sort controls styling */
-    #sortControls {
+    /* Sort and Filter Controls */
+    #sortControls, #filterControls {
       margin-bottom: 10px;
+    }
+    #filterControls label {
+      margin-right: 10px;
+    }
+    #filterAmenities label {
+      margin-right: 10px;
+      display: inline-block;
     }
     table {
       width: 100%;
@@ -53,7 +60,7 @@
       cursor: pointer;
       margin: 2px;
     }
-    /* Stack amenity checkboxes vertically */
+    /* Stack amenity checkboxes vertically in the new listing row and in edit mode */
     .amenity-option {
       display: block;
       margin-bottom: 4px;
@@ -73,7 +80,6 @@
     <p>Helping you decide where to live in New York City.</p>
   </header>
   <div class="container">
-
     <!-- Sort Controls -->
     <div id="sortControls">
       Sort by: 
@@ -84,7 +90,36 @@
       </select>
       <button id="sortBtn">Sort</button>
     </div>
-
+    
+    <!-- Filter Controls -->
+    <div id="filterControls">
+      Filter by Neighborhood: 
+      <select id="filterNeighborhood">
+        <option value="All">All</option>
+      </select>
+      Filter by Amenities:
+      <span id="filterAmenities">
+        <!-- Pre-defined amenities checkboxes -->
+        <label>
+          <input type="checkbox" value="Laundry Room">Laundry Room
+        </label>
+        <label>
+          <input type="checkbox" value="AC">AC
+        </label>
+        <label>
+          <input type="checkbox" value="Gym">Gym
+        </label>
+        <label>
+          <input type="checkbox" value="Game room">Game room
+        </label>
+        <label>
+          <input type="checkbox" value="Pool">Pool
+        </label>
+      </span>
+      <button id="filterBtn">Apply Filters</button>
+      <button id="clearFiltersBtn">Clear Filters</button>
+    </div>
+    
     <table id="listingsTable">
       <thead>
         <tr>
@@ -219,6 +254,52 @@
       return td;
     }
 
+    // --- FILTERING FUNCTIONS ---
+
+    // Build an array of objects {item, idx} for each listing.
+    // Then filter based on neighborhood and amenities.
+    function getFilteredListings() {
+      let arr = listings.map((item, idx) => ({ item, idx }));
+      let selectedNeighborhood = document.getElementById('filterNeighborhood').value;
+      if (selectedNeighborhood !== "All") {
+        arr = arr.filter(obj =>
+          obj.item.neighborhood.toLowerCase() === selectedNeighborhood.toLowerCase());
+      }
+      let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
+      let selectedAmenities = [];
+      amenityCheckboxes.forEach(cb => {
+        if (cb.checked) selectedAmenities.push(cb.value);
+      });
+      if (selectedAmenities.length > 0) {
+        arr = arr.filter(obj => {
+          let listAmenities = obj.item.amenities.split(',').map(a => a.trim().toLowerCase());
+          return selectedAmenities.every(am => listAmenities.includes(am.toLowerCase()));
+        });
+      }
+      return arr;
+    }
+
+    // Update the Neighborhood filter options based on existing listings.
+    function updateNeighborhoodFilterOptions() {
+      let select = document.getElementById("filterNeighborhood");
+      let neighborhoods = new Set();
+      listings.forEach(listing => {
+        if (listing.neighborhood && listing.neighborhood.trim() !== "") {
+          neighborhoods.add(listing.neighborhood.trim());
+        }
+      });
+      // Clear and add "All" option.
+      select.innerHTML = '<option value="All">All</option>';
+      neighborhoods.forEach(n => {
+        let option = document.createElement("option");
+        option.value = n;
+        option.textContent = n;
+        select.appendChild(option);
+      });
+    }
+
+    // --- DISPLAY FUNCTIONS ---
+
     // Create a table row in display mode.
     function createRow(listing, index) {
       let tr = document.createElement('tr');
@@ -230,7 +311,7 @@
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
 
-      // For Distance columns, use the custom helper.
+      // Distance cells using custom helper.
       tr.appendChild(createDistanceCell(listing.distanceToWorkX));
       tr.appendChild(createDistanceCell(listing.distanceToWorkY));
 
@@ -271,19 +352,25 @@
       return tr;
     }
 
-    // Refresh the entire table (keeping the new listing row intact).
+    // Refresh the table display. Applies filters and then iterates over the filtered list.
     function refreshTable() {
+      updateNeighborhoodFilterOptions();
       const tbody = document.querySelector('#listingsTable tbody');
+      // Remove all rows except the new listing row.
       Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
         if (tr.id !== 'newListingRow') {
           tr.remove();
         }
       });
-      listings.forEach((listing, index) => {
-        let row = createRow(listing, index);
+      // Get filtered listings with original indices.
+      let filtered = getFilteredListings();
+      filtered.forEach(obj => {
+        let row = createRow(obj.item, obj.idx);
         tbody.appendChild(row);
       });
     }
+
+    // --- ADD & EDIT FUNCTIONS ---
 
     // Helper: Get selected amenities from a container element.
     function getSelectedAmenities(container) {
@@ -295,8 +382,7 @@
       return selected.join(', ');
     }
 
-    // Add a new listing by gathering input values, auto-generating the Google Maps links,
-    // and then saving the listing.
+    // Add new listing by gathering values, generating travel links, and saving.
     function addNewListing() {
       let price = document.getElementById('newPrice').value.trim();
       let location = document.getElementById('newLocation').value.trim();
@@ -360,7 +446,6 @@
       let neighborhoodCell = createInputCell(listing.neighborhood);
       let bathroomsCell = createInputCell(listing.bathrooms, 'number');
       let bedroomsCell = createInputCell(listing.bedrooms, 'number');
-      // For Distance cells, show inputs with their current values.
       let distanceGSCell = createInputCell(listing.distanceToWorkX);
       let distanceBTGCell = createInputCell(listing.distanceToWorkY);
 
@@ -442,22 +527,30 @@
       row.appendChild(actionCell);
     }
 
-    // Sorting functionality.
+    // --- EVENT LISTENERS FOR SORTING & FILTERING ---
+
     document.getElementById('sortBtn').addEventListener('click', function() {
       let criteria = document.getElementById('sortCriteria').value;
       listings.sort((a, b) => {
         let valA, valB;
         if (criteria === 'price') {
-          // Remove non-numeric characters and parse price.
           valA = parseFloat(a.price.replace(/[^0-9.]/g, "")) || 0;
           valB = parseFloat(b.price.replace(/[^0-9.]/g, "")) || 0;
         } else if (criteria === 'distanceToWorkX' || criteria === 'distanceToWorkY') {
-          // Use the helper to get a numeric value for sorting.
           valA = getSortableValue(a[criteria]);
           valB = getSortableValue(b[criteria]);
         }
         return valA - valB;
       });
+      refreshTable();
+    });
+
+    document.getElementById('filterBtn').addEventListener('click', refreshTable);
+
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+      document.getElementById('filterNeighborhood').value = "All";
+      let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
+      amenityCheckboxes.forEach(cb => cb.checked = false);
       refreshTable();
     });
 
