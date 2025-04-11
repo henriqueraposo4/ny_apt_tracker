@@ -28,6 +28,7 @@
       text-align: left;
       padding: 12px;
       border: 1px solid #ddd;
+      vertical-align: middle;
     }
     th {
       background: #f2f2f2;
@@ -47,6 +48,10 @@
       border-radius: 4px;
       cursor: pointer;
       margin: 2px;
+    }
+    /* Style checkboxes inline inside the cell */
+    .amenity-option {
+      margin-right: 8px;
     }
     .footer {
       text-align: center;
@@ -75,6 +80,7 @@
           <th>Distance to Work Y</th>
           <th>Amenities</th>
           <th>Original URL</th>
+          <th>Notes</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -88,8 +94,26 @@
           <td><input type="number" id="newBedrooms" placeholder="Bedrooms"></td>
           <td><input type="text" id="newDistanceX" placeholder="Distance to Work X"></td>
           <td><input type="text" id="newDistanceY" placeholder="Distance to Work Y"></td>
-          <td><input type="text" id="newAmenities" placeholder="Amenities"></td>
+          <!-- Amenities: Pre-defined checkboxes -->
+          <td id="newAmenitiesCell">
+            <label class="amenity-option">
+              <input type="checkbox" value="Laundry Room">Laundry Room
+            </label>
+            <label class="amenity-option">
+              <input type="checkbox" value="AC">AC
+            </label>
+            <label class="amenity-option">
+              <input type="checkbox" value="Gym">Gym
+            </label>
+            <label class="amenity-option">
+              <input type="checkbox" value="Game room">Game room
+            </label>
+            <label class="amenity-option">
+              <input type="checkbox" value="Pool">Pool
+            </label>
+          </td>
           <td><input type="url" id="newOriginalUrl" placeholder="Original URL"></td>
+          <td><input type="text" id="newNotes" placeholder="Notes"></td>
           <td><button id="addListingBtn">Add</button></td>
         </tr>
         <!-- Existing listings will be inserted here -->
@@ -100,6 +124,9 @@
     <p>&copy; 2025 NYC Apartment Finder</p>
   </footer>
   <script>
+    // Pre-defined list of amenity options
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Pool"];
+    
     // Global array to hold listing objects
     let listings = [];
 
@@ -138,9 +165,9 @@
       tr.appendChild(createCell(listing.bedrooms));
       tr.appendChild(createCell(listing.distanceToWorkX));
       tr.appendChild(createCell(listing.distanceToWorkY));
+      // Amenities: display pre-defined amenity selections (comma-separated)
       tr.appendChild(createCell(listing.amenities));
-
-      // For URL, create a clickable link
+      // Original URL as clickable link
       let urlCell = document.createElement('td');
       let link = document.createElement('a');
       link.href = listing.originalUrl;
@@ -148,7 +175,9 @@
       link.target = '_blank';
       urlCell.appendChild(link);
       tr.appendChild(urlCell);
-
+      // Notes
+      tr.appendChild(createCell(listing.notes));
+      
       // Actions cell: Edit button
       let actionCell = document.createElement('td');
       let editBtn = document.createElement('button');
@@ -178,6 +207,18 @@
       });
     }
 
+    // Helper: Get selected amenities from a container element (returns a comma-separated string)
+    function getSelectedAmenities(container) {
+      let checkboxes = container.querySelectorAll('input[type="checkbox"]');
+      let selected = [];
+      checkboxes.forEach(cb => {
+        if (cb.checked) {
+          selected.push(cb.value);
+        }
+      });
+      return selected.join(', ');
+    }
+
     // Add new listing using the values from the input row.
     function addNewListing() {
       let price = document.getElementById('newPrice').value.trim();
@@ -187,8 +228,12 @@
       let bedrooms = document.getElementById('newBedrooms').value.trim();
       let distanceX = document.getElementById('newDistanceX').value.trim();
       let distanceY = document.getElementById('newDistanceY').value.trim();
-      let amenities = document.getElementById('newAmenities').value.trim();
       let originalUrl = document.getElementById('newOriginalUrl').value.trim();
+      let notes = document.getElementById('newNotes').value.trim();
+      
+      // Get selected amenities from the amenities cell
+      let newAmenitiesCell = document.getElementById("newAmenitiesCell");
+      let amenities = getSelectedAmenities(newAmenitiesCell) || 'N/A';
       
       if (!price && !location && !neighborhood) {
         alert("Please fill in at least one of Price, Location, or Neighborhood.");
@@ -203,8 +248,9 @@
         bedrooms: bedrooms || 0,
         distanceToWorkX: distanceX || 'N/A',
         distanceToWorkY: distanceY || 'N/A',
-        amenities: amenities || 'N/A',
-        originalUrl: originalUrl || 'N/A'
+        amenities: amenities,
+        originalUrl: originalUrl || 'N/A',
+        notes: notes || ''
       };
       listings.push(newListing);
       saveListings();
@@ -217,8 +263,10 @@
       document.getElementById('newBedrooms').value = '';
       document.getElementById('newDistanceX').value = '';
       document.getElementById('newDistanceY').value = '';
-      document.getElementById('newAmenities').value = '';
+      // Clear amenities checkboxes
+      newAmenitiesCell.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
       document.getElementById('newOriginalUrl').value = '';
+      document.getElementById('newNotes').value = '';
     }
 
     // Enable editing on an existing row.
@@ -236,6 +284,7 @@
         return td;
       }
       
+      // Price, Location, Neighborhood, Bathrooms, Bedrooms,
       row.appendChild(createInputCell(listing.price));
       row.appendChild(createInputCell(listing.location));
       row.appendChild(createInputCell(listing.neighborhood));
@@ -243,8 +292,30 @@
       row.appendChild(createInputCell(listing.bedrooms, 'number'));
       row.appendChild(createInputCell(listing.distanceToWorkX));
       row.appendChild(createInputCell(listing.distanceToWorkY));
-      row.appendChild(createInputCell(listing.amenities));
+      
+      // Amenities: create a cell with checkboxes
+      let amenitiesTd = document.createElement('td');
+      amenityOptions.forEach(option => {
+        let label = document.createElement('label');
+        label.className = 'amenity-option';
+        let checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.value = option;
+        // Mark as checked if the listing's amenities (assumed comma-separated) include this option.
+        let selectedAmenities = listing.amenities.split(',').map(a => a.trim());
+        if (selectedAmenities.indexOf(option) > -1) {
+          checkbox.checked = true;
+        }
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(option));
+        amenitiesTd.appendChild(label);
+      });
+      row.appendChild(amenitiesTd);
+      
+      // Original URL input
       row.appendChild(createInputCell(listing.originalUrl, 'url'));
+      // Notes input
+      row.appendChild(createInputCell(listing.notes));
       
       // Actions cell with Save and Cancel buttons.
       let actionCell = document.createElement('td');
@@ -252,6 +323,10 @@
       saveBtn.textContent = 'Save';
       saveBtn.addEventListener('click', function() {
         let inputs = row.querySelectorAll('input');
+        // The inputs order corresponds to:
+        // [Price, Location, Neighborhood, Bathrooms, Bedrooms, DistanceX, DistanceY,
+        // for Amenities we handle separately, then Original URL, then Notes].
+        // So, get inputs for non-amenities fields:
         let updatedListing = {
           price: inputs[0].value.trim() || 'N/A',
           location: inputs[1].value.trim() || 'N/A',
@@ -260,9 +335,17 @@
           bedrooms: inputs[4].value.trim() || 0,
           distanceToWorkX: inputs[5].value.trim() || 'N/A',
           distanceToWorkY: inputs[6].value.trim() || 'N/A',
-          amenities: inputs[7].value.trim() || 'N/A',
-          originalUrl: inputs[8].value.trim() || 'N/A'
+          // Amenities will be gathered from the checkboxes in the amenities cell
+          amenities: '',
+          originalUrl: inputs[inputs.length - 2].value.trim() || 'N/A',
+          notes: inputs[inputs.length - 1].value.trim() || ''
         };
+        // The amenities cell is the 8th cell (index 7) in the row.
+        let amenityCheckboxes = row.children[7].querySelectorAll('input[type="checkbox"]');
+        let selected = [];
+        amenityCheckboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+        updatedListing.amenities = selected.join(', ') || 'N/A';
+        
         listings[index] = updatedListing;
         saveListings();
         refreshTable();
