@@ -158,6 +158,23 @@
              encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
     }
 
+    // Create a table cell that displays a distance value.
+    // If the value is a URL (starts with "http"), display "View Route" as a clickable link.
+    // Otherwise, display the value as plain text.
+    function createDistanceCell(value) {
+      let td = document.createElement('td');
+      if (value.trim().toLowerCase().startsWith("http")) {
+        let a = document.createElement("a");
+        a.href = value;
+        a.target = "_blank";
+        a.textContent = "View Route";
+        td.appendChild(a);
+      } else {
+        td.textContent = value;
+      }
+      return td;
+    }
+
     // Create a table cell with plain text content.
     function createTextCell(content) {
       let td = document.createElement('td');
@@ -186,23 +203,9 @@
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
 
-      // Distance to GS as clickable link
-      let distanceGSCell = document.createElement('td');
-      let linkGS = document.createElement('a');
-      linkGS.href = listing.distanceToWorkX;
-      linkGS.target = "_blank";
-      linkGS.textContent = "View Route";
-      distanceGSCell.appendChild(linkGS);
-      tr.appendChild(distanceGSCell);
-
-      // Distance to BTG as clickable link
-      let distanceBTGCell = document.createElement('td');
-      let linkBTG = document.createElement('a');
-      linkBTG.href = listing.distanceToWorkY;
-      linkBTG.target = "_blank";
-      linkBTG.textContent = "View Route";
-      distanceBTGCell.appendChild(linkBTG);
-      tr.appendChild(distanceBTGCell);
+      // For Distance columns, use the custom helper
+      tr.appendChild(createDistanceCell(listing.distanceToWorkX));
+      tr.appendChild(createDistanceCell(listing.distanceToWorkY));
 
       tr.appendChild(createTextCell(listing.amenities));
 
@@ -327,12 +330,13 @@
       let listing = listings[index];
       row.innerHTML = '';
 
-      // Create separate cells for each field.
+      // Create individual edit cells.
       let priceCell = createInputCell(listing.price);
       let locationCell = createInputCell(listing.location);
       let neighborhoodCell = createInputCell(listing.neighborhood);
       let bathroomsCell = createInputCell(listing.bathrooms, 'number');
       let bedroomsCell = createInputCell(listing.bedrooms, 'number');
+      // For Distance cells, show an input with the current value.
       let distanceGSCell = createInputCell(listing.distanceToWorkX);
       let distanceBTGCell = createInputCell(listing.distanceToWorkY);
 
@@ -344,7 +348,7 @@
       row.appendChild(distanceGSCell);
       row.appendChild(distanceBTGCell);
 
-      // Create Amenities cell with vertically stacked checkboxes.
+      // Amenities cell with checkboxes.
       let amenitiesTd = document.createElement('td');
       amenityOptions.forEach(option => {
         let label = document.createElement('label');
@@ -353,7 +357,9 @@
         checkbox.type = 'checkbox';
         checkbox.value = option;
         let selectedAmenities = listing.amenities.split(',').map(a => a.trim());
-        if (selectedAmenities.includes(option)) { checkbox.checked = true; }
+        if (selectedAmenities.includes(option)) { 
+          checkbox.checked = true; 
+        }
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(option));
         amenitiesTd.appendChild(label);
@@ -383,7 +389,7 @@
           originalUrl: originalUrlCell.querySelector('input').value.trim() || 'N/A',
           notes: notesCell.querySelector('input').value.trim() || ''
         };
-        // Gather selected amenities from the amenities cell.
+        // Get the selected amenities.
         let checkboxes = amenitiesTd.querySelectorAll('input[type="checkbox"]');
         let selected = [];
         checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
