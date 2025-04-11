@@ -60,7 +60,7 @@
       cursor: pointer;
       margin: 2px;
     }
-    /* Stack amenity checkboxes vertically in the new listing row and in edit mode */
+    /* Stack amenity checkboxes vertically */
     .amenity-option {
       display: block;
       margin-bottom: 4px;
@@ -115,6 +115,10 @@
           <input type="checkbox" value="Pool">Pool
         </label>
       </span>
+      Filter by Bathrooms: 
+      <input type="number" id="filterBathrooms" min="0" placeholder="Any">
+      Filter by Bedrooms: 
+      <input type="number" id="filterBedrooms" min="0" placeholder="Any">
       <button id="filterBtn">Apply Filters</button>
       <button id="clearFiltersBtn">Clear Filters</button>
     </div>
@@ -258,7 +262,7 @@
     // preserving the currently selected option.
     function updateNeighborhoodFilterOptions() {
       let select = document.getElementById("filterNeighborhood");
-      let currentSelection = select.value;  // Save the current selection.
+      let currentSelection = select.value;  // Save current selection.
       let neighborhoods = new Set();
       listings.forEach(listing => {
         if (listing.neighborhood && listing.neighborhood.trim() !== "") {
@@ -273,7 +277,7 @@
         option.textContent = n;
         select.appendChild(option);
       });
-      // Restore the previous selection if it exists.
+      // Restore previous selection if it exists.
       if (neighborhoods.has(currentSelection)) {
         select.value = currentSelection;
       } else {
@@ -281,7 +285,7 @@
       }
     }
 
-    // Build an array of objects {item, idx} for each listing and filter.
+    // Build an array of objects {item, idx} for each listing and apply filters.
     function getFilteredListings() {
       let arr = listings.map((item, idx) => ({ item, idx }));
       let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
@@ -291,6 +295,7 @@
           return listingNeighborhood === selectedNeighborhood;
         });
       }
+      // Filter by Amenities.
       let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
       let selectedAmenities = [];
       amenityCheckboxes.forEach(cb => {
@@ -301,6 +306,18 @@
           let listAmenities = obj.item.amenities.split(',').map(a => a.trim().toLowerCase());
           return selectedAmenities.every(am => listAmenities.includes(am));
         });
+      }
+      // Filter by Bathrooms.
+      let bathroomsFilter = document.getElementById('filterBathrooms').value.trim();
+      if (bathroomsFilter !== "") {
+        let bf = parseInt(bathroomsFilter);
+        arr = arr.filter(obj => parseInt(obj.item.bathrooms) === bf);
+      }
+      // Filter by Bedrooms.
+      let bedroomsFilter = document.getElementById('filterBedrooms').value.trim();
+      if (bedroomsFilter !== "") {
+        let bb = parseInt(bedroomsFilter);
+        arr = arr.filter(obj => parseInt(obj.item.bedrooms) === bb);
       }
       return arr;
     }
@@ -318,7 +335,7 @@
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
 
-      // For Distance columns, use the custom helper.
+      // Distance cells.
       tr.appendChild(createDistanceCell(listing.distanceToWorkX));
       tr.appendChild(createDistanceCell(listing.distanceToWorkY));
 
@@ -335,7 +352,7 @@
 
       tr.appendChild(createTextCell(listing.notes));
 
-      // Actions cell with Edit and Delete buttons.
+      // Actions cell.
       let actionCell = document.createElement('td');
       let editBtn = document.createElement('button');
       editBtn.textContent = 'Edit';
@@ -555,6 +572,8 @@
 
     document.getElementById('clearFiltersBtn').addEventListener('click', function() {
       document.getElementById('filterNeighborhood').value = "All";
+      document.getElementById('filterBathrooms').value = "";
+      document.getElementById('filterBedrooms').value = "";
       let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
       amenityCheckboxes.forEach(cb => cb.checked = false);
       refreshTable();
