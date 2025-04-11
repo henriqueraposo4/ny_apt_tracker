@@ -9,14 +9,18 @@ public class ApartmentProcessor {
     /**
      * Process the given URL to extract apartment details.
      * Note: This is a placeholder for the logic.
-     * In a future implementation, add code to fetch the HTML content and scrape necessary data.
+     * In a future implementation, add code to fetch the HTML content and scrape or parse:
+     * - Price, Location, Neighborhood, Bathrooms, Bedrooms, Distance to Work Y, Amenities, and Original URL.
      *
      * @param url The listing URL as a String.
      * @return An ApartmentDetails object containing structured apartment data.
      */
     public ApartmentDetails processListing(String url) {
         ApartmentDetails details = new ApartmentDetails();
-        // TODO: Implement the logic to parse the URL and populate the details object.
+        // TODO: Implement the logic to fetch content from the URL and populate the details object.
+        // For instance, parse HTML and extract:
+        //  - Price, Location, Neighborhood, Bathrooms, Bedrooms, Distance to Work Y,
+        //    Amenities, and store the Original URL.
         return details;
     }
 
