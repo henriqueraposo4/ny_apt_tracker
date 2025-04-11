@@ -125,9 +125,12 @@
     <p>&copy; 2025 NYC Apartment Finder</p>
   </footer>
   <script>
-    // Update pre-defined target addresses.
+    // Updated target addresses
     const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
     const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
+
+    // Pre-defined amenity options
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Pool"];
 
     // Global array to hold listing objects
     let listings = [];
@@ -152,61 +155,70 @@
     // Build a Google Maps directions URL given an origin and a destination.
     function buildGoogleMapsLink(origin, destination) {
       return "https://www.google.com/maps/dir/" +
-              encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
+             encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
     }
 
-    // Create a table row to display a listing in non-editable mode.
-    // For the Distance columns, we create clickable Google Maps links.
+    // Create a table cell with plain text content.
+    function createTextCell(content) {
+      let td = document.createElement('td');
+      td.innerHTML = content;
+      return td;
+    }
+
+    // Create a table cell with an input field.
+    function createInputCell(value, type = 'text') {
+      let td = document.createElement('td');
+      let input = document.createElement('input');
+      input.type = type;
+      input.value = value;
+      td.appendChild(input);
+      return td;
+    }
+
+    // Create a table row in display mode.
     function createRow(listing, index) {
       let tr = document.createElement('tr');
       tr.setAttribute('data-index', index);
 
-      function createCell(content) {
-        let td = document.createElement('td');
-        td.innerHTML = content;
-        return td;
-      }
+      tr.appendChild(createTextCell(listing.price));
+      tr.appendChild(createTextCell(listing.location));
+      tr.appendChild(createTextCell(listing.neighborhood));
+      tr.appendChild(createTextCell(listing.bathrooms));
+      tr.appendChild(createTextCell(listing.bedrooms));
 
-      tr.appendChild(createCell(listing.price));
-      tr.appendChild(createCell(listing.location));
-      tr.appendChild(createCell(listing.neighborhood));
-      tr.appendChild(createCell(listing.bathrooms));
-      tr.appendChild(createCell(listing.bedrooms));
+      // Distance to GS as clickable link
+      let distanceGSCell = document.createElement('td');
+      let linkGS = document.createElement('a');
+      linkGS.href = listing.distanceToWorkX;
+      linkGS.target = "_blank";
+      linkGS.textContent = "View Route";
+      distanceGSCell.appendChild(linkGS);
+      tr.appendChild(distanceGSCell);
 
-      // Distance to GS as clickable link:
-      let distanceXCell = document.createElement('td');
-      let linkX = document.createElement('a');
-      linkX.href = listing.distanceToWorkX;
-      linkX.target = "_blank";
-      linkX.textContent = "View Route";
-      distanceXCell.appendChild(linkX);
-      tr.appendChild(distanceXCell);
+      // Distance to BTG as clickable link
+      let distanceBTGCell = document.createElement('td');
+      let linkBTG = document.createElement('a');
+      linkBTG.href = listing.distanceToWorkY;
+      linkBTG.target = "_blank";
+      linkBTG.textContent = "View Route";
+      distanceBTGCell.appendChild(linkBTG);
+      tr.appendChild(distanceBTGCell);
 
-      // Distance to BTG as clickable link:
-      let distanceYCell = document.createElement('td');
-      let linkY = document.createElement('a');
-      linkY.href = listing.distanceToWorkY;
-      linkY.target = "_blank";
-      linkY.textContent = "View Route";
-      distanceYCell.appendChild(linkY);
-      tr.appendChild(distanceYCell);
+      tr.appendChild(createTextCell(listing.amenities));
 
-      // Amenities (displayed as comma-separated text)
-      tr.appendChild(createCell(listing.amenities));
       // Original URL as clickable link
-      let urlCell = document.createElement('td');
+      let originalUrlCell = document.createElement('td');
       let linkURL = document.createElement('a');
       linkURL.href = listing.originalUrl;
       linkURL.textContent = listing.originalUrl;
-      linkURL.target = '_blank';
-      urlCell.appendChild(linkURL);
-      tr.appendChild(urlCell);
-      // Notes
-      tr.appendChild(createCell(listing.notes));
+      linkURL.target = "_blank";
+      originalUrlCell.appendChild(linkURL);
+      tr.appendChild(originalUrlCell);
 
-      // Actions cell: Edit and Delete buttons
+      tr.appendChild(createTextCell(listing.notes));
+
+      // Actions cell with Edit and Delete buttons
       let actionCell = document.createElement('td');
-
       let editBtn = document.createElement('button');
       editBtn.textContent = 'Edit';
       editBtn.addEventListener('click', function() {
@@ -229,35 +241,33 @@
       return tr;
     }
 
-    // Refresh table display by removing old rows and re-displaying from the listings array.
+    // Refresh the entire table (keeping the new listing row intact).
     function refreshTable() {
       const tbody = document.querySelector('#listingsTable tbody');
-      // Remove all rows except the new listing row (identified by id)
+      // Remove all rows except the new listing row.
       Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
         if (tr.id !== 'newListingRow') {
           tr.remove();
         }
       });
-      // Add rows for each listing in the array
+      // Append each listing row.
       listings.forEach((listing, index) => {
         let row = createRow(listing, index);
         tbody.appendChild(row);
       });
     }
 
-    // Helper: Get selected amenities from a container element (returns a comma-separated string)
+    // Helper: Get selected amenities from a container element.
     function getSelectedAmenities(container) {
       let checkboxes = container.querySelectorAll('input[type="checkbox"]');
       let selected = [];
       checkboxes.forEach(cb => {
-        if (cb.checked) {
-          selected.push(cb.value);
-        }
+        if (cb.checked) selected.push(cb.value);
       });
       return selected.join(', ');
     }
 
-    // Add new listing by gathering input values, auto-generating the Distance links,
+    // Add a new listing by gathering input values, auto-generating the Google Maps links,
     // and then saving the listing.
     function addNewListing() {
       let price = document.getElementById('newPrice').value.trim();
@@ -265,80 +275,76 @@
       let neighborhood = document.getElementById('newNeighborhood').value.trim();
       let bathrooms = document.getElementById('newBathrooms').value.trim();
       let bedrooms = document.getElementById('newBedrooms').value.trim();
-      
-      // For the new listing, the Location field is used to build the Google Maps links.
+
       if (!location) {
         alert("Please enter the apartment location so travel links can be generated.");
         return;
       }
-      
-      // Generate the Google Maps links using the user's location and the pre-defined target addresses.
-      const linkX = buildGoogleMapsLink(location, workAddressX);
-      const linkY = buildGoogleMapsLink(location, workAddressY);
-      
+
+      // Generate the Google Maps links.
+      const linkGS = buildGoogleMapsLink(location, workAddressX);
+      const linkBTG = buildGoogleMapsLink(location, workAddressY);
+
       let originalUrl = document.getElementById('newOriginalUrl').value.trim();
       let notes = document.getElementById('newNotes').value.trim();
       let amenities = getSelectedAmenities(document.getElementById("newAmenitiesCell")) || 'N/A';
-      
+
       if (!price && !neighborhood) {
         alert("Please fill in at least one of Price or Neighborhood.");
         return;
       }
-      
+
       let newListing = {
         price: price || 'N/A',
         location: location || 'N/A',
         neighborhood: neighborhood || 'N/A',
         bathrooms: bathrooms || 0,
         bedrooms: bedrooms || 0,
-        distanceToWorkX: linkX,
-        distanceToWorkY: linkY,
+        distanceToWorkX: linkGS,
+        distanceToWorkY: linkBTG,
         amenities: amenities,
         originalUrl: originalUrl || 'N/A',
         notes: notes || ''
       };
+
       listings.push(newListing);
       saveListings();
       refreshTable();
-      // Clear input fields for new listing row.
+
+      // Clear the new listing row.
       document.getElementById('newPrice').value = '';
       document.getElementById('newLocation').value = '';
       document.getElementById('newNeighborhood').value = '';
       document.getElementById('newBathrooms').value = '';
       document.getElementById('newBedrooms').value = '';
-      // Clear amenities checkboxes
       document.getElementById("newAmenitiesCell").querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
       document.getElementById('newOriginalUrl').value = '';
       document.getElementById('newNotes').value = '';
     }
 
-    // Enable editing on an existing row.
+    // Enable editing of an existing row.
     function enableEditing(row, index) {
       let listing = listings[index];
       row.innerHTML = '';
-      
-      // Helper: Create a cell with an input field.
-      function createInputCell(value, type = 'text') {
-        let td = document.createElement('td');
-        let input = document.createElement('input');
-        input.type = type;
-        input.value = value;
-        td.appendChild(input);
-        return td;
-      }
-      
-      // Price, Location, Neighborhood, Bathrooms, and Bedrooms remain editable.
-      row.appendChild(createInputCell(listing.price));
-      row.appendChild(createInputCell(listing.location));
-      row.appendChild(createInputCell(listing.neighborhood));
-      row.appendChild(createInputCell(listing.bathrooms, 'number'));
-      row.appendChild(createInputCell(listing.bedrooms, 'number'));
-      
-      // For Distance columns, show input fields pre-populated with the link values.
-      row.appendChild(createInputCell(listing.distanceToWorkX));
-      row.appendChild(createInputCell(listing.distanceToWorkY));
-      
-      // Amenities: create a cell with checkboxes (stacked vertically)
+
+      // Create separate cells for each field.
+      let priceCell = createInputCell(listing.price);
+      let locationCell = createInputCell(listing.location);
+      let neighborhoodCell = createInputCell(listing.neighborhood);
+      let bathroomsCell = createInputCell(listing.bathrooms, 'number');
+      let bedroomsCell = createInputCell(listing.bedrooms, 'number');
+      let distanceGSCell = createInputCell(listing.distanceToWorkX);
+      let distanceBTGCell = createInputCell(listing.distanceToWorkY);
+
+      row.appendChild(priceCell);
+      row.appendChild(locationCell);
+      row.appendChild(neighborhoodCell);
+      row.appendChild(bathroomsCell);
+      row.appendChild(bedroomsCell);
+      row.appendChild(distanceGSCell);
+      row.appendChild(distanceBTGCell);
+
+      // Create Amenities cell with vertically stacked checkboxes.
       let amenitiesTd = document.createElement('td');
       amenityOptions.forEach(option => {
         let label = document.createElement('label');
@@ -347,53 +353,51 @@
         checkbox.type = 'checkbox';
         checkbox.value = option;
         let selectedAmenities = listing.amenities.split(',').map(a => a.trim());
-        if (selectedAmenities.indexOf(option) > -1) {
-          checkbox.checked = true;
-        }
+        if (selectedAmenities.includes(option)) { checkbox.checked = true; }
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(option));
         amenitiesTd.appendChild(label);
       });
       row.appendChild(amenitiesTd);
-      
-      // Original URL input
-      row.appendChild(createInputCell(listing.originalUrl, 'url'));
-      // Notes input
-      row.appendChild(createInputCell(listing.notes));
-      
+
+      // Original URL and Notes cells.
+      let originalUrlCell = createInputCell(listing.originalUrl, 'url');
+      let notesCell = createInputCell(listing.notes);
+      row.appendChild(originalUrlCell);
+      row.appendChild(notesCell);
+
       // Actions cell with Save, Cancel, and Delete buttons.
       let actionCell = document.createElement('td');
       let saveBtn = document.createElement('button');
       saveBtn.textContent = 'Save';
       saveBtn.addEventListener('click', function() {
-        let inputs = row.querySelectorAll('input');
         let updatedListing = {
-          price: inputs[0].value.trim() || 'N/A',
-          location: inputs[1].value.trim() || 'N/A',
-          neighborhood: inputs[2].value.trim() || 'N/A',
-          bathrooms: inputs[3].value.trim() || 0,
-          bedrooms: inputs[4].value.trim() || 0,
-          distanceToWorkX: inputs[5].value.trim() || 'N/A',
-          distanceToWorkY: inputs[6].value.trim() || 'N/A',
+          price: priceCell.querySelector('input').value.trim() || 'N/A',
+          location: locationCell.querySelector('input').value.trim() || 'N/A',
+          neighborhood: neighborhoodCell.querySelector('input').value.trim() || 'N/A',
+          bathrooms: bathroomsCell.querySelector('input').value.trim() || 0,
+          bedrooms: bedroomsCell.querySelector('input').value.trim() || 0,
+          distanceToWorkX: distanceGSCell.querySelector('input').value.trim() || 'N/A',
+          distanceToWorkY: distanceBTGCell.querySelector('input').value.trim() || 'N/A',
           amenities: '',
-          originalUrl: inputs[inputs.length - 2].value.trim() || 'N/A',
-          notes: inputs[inputs.length - 1].value.trim() || ''
+          originalUrl: originalUrlCell.querySelector('input').value.trim() || 'N/A',
+          notes: notesCell.querySelector('input').value.trim() || ''
         };
-        // The amenities cell is the 8th cell (index 7).
-        let amenityCheckboxes = row.children[7].querySelectorAll('input[type="checkbox"]');
+        // Gather selected amenities from the amenities cell.
+        let checkboxes = amenitiesTd.querySelectorAll('input[type="checkbox"]');
         let selected = [];
-        amenityCheckboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
+        checkboxes.forEach(cb => { if (cb.checked) selected.push(cb.value); });
         updatedListing.amenities = selected.join(', ') || 'N/A';
-        
+
         listings[index] = updatedListing;
         saveListings();
         refreshTable();
       });
-      
+
       let cancelBtn = document.createElement('button');
       cancelBtn.textContent = 'Cancel';
       cancelBtn.addEventListener('click', refreshTable);
-      
+
       let deleteBtn = document.createElement('button');
       deleteBtn.textContent = 'Delete';
       deleteBtn.addEventListener('click', function() {
@@ -403,17 +407,15 @@
           refreshTable();
         }
       });
-      
+
       actionCell.appendChild(saveBtn);
       actionCell.appendChild(cancelBtn);
       actionCell.appendChild(deleteBtn);
       row.appendChild(actionCell);
     }
 
-    // Set event listener for the Add button.
     document.getElementById('addListingBtn').addEventListener('click', addNewListing);
 
-    // Load and display saved listings on page load.
     window.addEventListener('load', function() {
       loadListings();
       refreshTable();
