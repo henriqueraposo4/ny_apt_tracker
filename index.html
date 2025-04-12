@@ -50,7 +50,7 @@
     }
     .max-filter-item label {
       margin-bottom: 4px;
-      font-weight: normal;
+      font-weight: normal; /* Not bold */
     }
     input[type="number"] {
       width: 150px;
@@ -100,7 +100,7 @@
   </style>
   
   <script>
-    // Firebase configuration – replace with your project's configuration if needed
+    // Firebase configuration – replace with your project's configuration values if needed.
     const firebaseConfig = {
       apiKey: "AIzaSyAcRL-9n99aA0HPjPQKA8OlTHMzWQD1vBQ",
       authDomain: "nyc-apt-tracker.firebaseapp.com",
@@ -109,9 +109,13 @@
       messagingSenderId: "176381773971",
       appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
     };
-    // Initialize Firebase and Firestore
+    // Initialize Firebase and Firestore using the compat libraries.
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    // Define target addresses used to generate Google Maps links.
+    const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
+    const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
   </script>
 </head>
 <body>
@@ -619,7 +623,9 @@
         checkbox.type = 'checkbox';
         checkbox.value = option;
         let selectedAmenities = listing.amenities.split(',').map(a => a.trim());
-        if (selectedAmenities.includes(option)) { checkbox.checked = true; }
+        if (selectedAmenities.includes(option)) { 
+          checkbox.checked = true; 
+        }
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(option));
         amenitiesTd.appendChild(label);
