@@ -49,7 +49,7 @@
     
     /* Container */
     .container {
-      max-width: 1100px;
+      max-width: 1400px; /* Increased from 1100px */
       margin: 40px auto;
       background: #fff;
       padding: 20px 30px;
@@ -58,7 +58,7 @@
     }
     
     /* Controls */
-    #sortControls, 
+    #sortControls,
     #filterControls {
       margin-bottom: 20px;
       display: flex;
@@ -79,8 +79,10 @@
     }
     #filterAmenities label {
       margin-right: 10px;
+      /* Display inline-block so that checkbox and text remain on one line */
       display: inline-block;
       font-weight: 400;
+      white-space: nowrap;
     }
     .max-filter-container {
       display: flex;
@@ -106,7 +108,7 @@
     /* Table Styling */
     table {
       width: 100%;
-      min-width: 900px; /* Force a reasonable minimum width so columns don’t scrunch too tightly */
+      min-width: 900px; /* Ensures the table columns don't become too compressed */
       border-collapse: collapse;
       background: #fff;
       border-radius: 6px;
@@ -126,6 +128,22 @@
     }
     tr:hover td {
       background: #f1f5f8;
+    }
+    
+    /* Specific Column Adjustments */
+    /* Amenities column (8th column) has extra width and prevents wrapping */
+    table th:nth-child(8),
+    table td:nth-child(8) {
+      min-width: 180px;
+      white-space: nowrap;
+    }
+    /* Original URL column (9th column) is made smaller and ellipsis is used for overflow */
+    table th:nth-child(9),
+    table td:nth-child(9) {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     
     /* Form Inputs */
@@ -155,10 +173,12 @@
       background: #556cd6;
     }
     
-    /* Amenity Checkbox */
+    /* Amenity Checkbox Options */
     .amenity-option {
-      display: block;
-      margin-bottom: 4px;
+      display: inline-block; /* Changed to inline-block to keep checkbox and label in one line */
+      margin-right: 10px;
+      vertical-align: middle;
+      white-space: nowrap;
     }
     
     /* Footer */
@@ -301,7 +321,7 @@
             <td><input type="number" id="newBedrooms" placeholder="Bedrooms"></td>
             <td>Auto-generated</td>
             <td>Auto-generated</td>
-            <!-- Amenities: Pre-defined checkboxes (stacked vertically) -->
+            <!-- Amenities: Pre-defined checkboxes (stacked inline now) -->
             <td id="newAmenitiesCell">
               <label class="amenity-option">
                 <input type="checkbox" value="Laundry Room">Laundry Room
@@ -581,10 +601,11 @@
       
       tr.appendChild(createTextCell(listing.amenities));
       
+      // ORIGINAL URL COLUMN: show only the word "link"
       let originalUrlCell = document.createElement('td');
       let linkURL = document.createElement('a');
       linkURL.href = listing.originalUrl;
-      linkURL.textContent = listing.originalUrl;
+      linkURL.textContent = "link";
       linkURL.target = "_blank";
       originalUrlCell.appendChild(linkURL);
       tr.appendChild(originalUrlCell);
