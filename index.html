@@ -50,7 +50,7 @@
     }
     .max-filter-item label {
       margin-bottom: 4px;
-      font-weight: normal; /* Unbolded */
+      font-weight: normal; /* Not bold */
     }
     input[type="number"] {
       width: 150px;
@@ -100,7 +100,7 @@
   </style>
   
   <script>
-    // Firebase configuration – replace with your own values if needed.
+    // Firebase configuration – replace with your own configuration if needed.
     const firebaseConfig = {
       apiKey: "AIzaSyAcRL-9n99aA0HPjPQKA8OlTHMzWQD1vBQ",
       authDomain: "nyc-apt-tracker.firebaseapp.com",
@@ -109,13 +109,18 @@
       messagingSenderId: "176381773971",
       appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
     };
+
     // Initialize Firebase and Firestore using compat libraries.
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Define target addresses.
+    // Define global variables: target addresses and amenity options.
     const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
     const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Pool"];
+
+    // Global array to hold listings (each listing includes its Firestore document ID).
+    let listings = [];
   </script>
 </head>
 <body>
@@ -239,9 +244,6 @@
   </footer>
   
   <script>
-    // Global array to hold listings—each listing will include its Firestore document ID.
-    let listings = [];
-    
     // --- FIRESTORE FUNCTIONS ---
     
     async function loadListings() {
@@ -271,6 +273,7 @@
         alert("Please enter the apartment location so travel links can be generated.");
         return;
       }
+      
       // Generate Google Maps links.
       const linkGS = buildGoogleMapsLink(location, workAddressX);
       const linkBTG = buildGoogleMapsLink(location, workAddressY);
@@ -299,7 +302,7 @@
       
       try {
         await db.collection("listings").add(newListing);
-        // Clear filter fields after adding so the new listing isn't hidden.
+        // Clear filters to show all listings after adding.
         document.getElementById('filterNeighborhood').value = "All";
         document.getElementById('filterMaxPrice').value = "";
         document.getElementById('filterMaxDistanceGS').value = "";
@@ -467,6 +470,7 @@
           return !isNaN(numericDistance) && numericDistance <= maxDistanceBTG;
         });
       }
+      
       return arr;
     }
     
@@ -474,7 +478,7 @@
     
     function createRow(listing, index) {
       let tr = document.createElement('tr');
-      // Set the data-id attribute to store the Firestore document ID.
+      // Store the Firestore document ID as a data attribute.
       tr.setAttribute('data-id', listing.id);
       
       tr.appendChild(createTextCell(listing.price));
@@ -501,7 +505,6 @@
       let actionCell = document.createElement('td');
       let editBtn = document.createElement('button');
       editBtn.textContent = 'Edit';
-      // Pass the document ID to the editing function.
       editBtn.addEventListener('click', function() {
         enableEditing(tr, listing.id);
       });
@@ -584,7 +587,7 @@
       
       db.collection("listings").add(newListing)
         .then(() => {
-          // Clear filters after adding so new listing is visible.
+          // Clear filter fields after adding so the new listing is visible.
           document.getElementById('filterNeighborhood').value = "All";
           document.getElementById('filterMaxPrice').value = "";
           document.getElementById('filterMaxDistanceGS').value = "";
@@ -604,7 +607,7 @@
     }
     
     function enableEditing(row, docId) {
-      // Find the listing with this document ID.
+      // Find the listing with the matching document ID.
       let listing = listings.find(item => item.id === docId);
       if (!listing) {
         console.error("Listing not found for editing");
@@ -636,8 +639,8 @@
         checkbox.type = 'checkbox';
         checkbox.value = option;
         let selectedAmenities = listing.amenities.split(',').map(a => a.trim());
-        if (selectedAmenities.includes(option)) { 
-          checkbox.checked = true; 
+        if (selectedAmenities.includes(option)) {
+          checkbox.checked = true;
         }
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(option));
