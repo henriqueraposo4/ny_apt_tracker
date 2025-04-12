@@ -49,7 +49,7 @@
     
     /* Container */
     .container {
-      max-width: 1400px; /* Increased from 1100px */
+      max-width: 1300px; /* Changed from 1400px to 1300px */
       margin: 40px auto;
       background: #fff;
       padding: 20px 30px;
@@ -131,10 +131,10 @@
     }
     
     /* Specific Column Adjustments */
-    /* Amenities column (8th column) has extra width and prevents wrapping */
+    /* Amenities column (8th column) adjusted to have a minimum width of 80px */
     table th:nth-child(8),
     table td:nth-child(8) {
-      min-width: 180px;
+      min-width: 80px;
       white-space: nowrap;
     }
     /* Original URL column (9th column) is made smaller and ellipsis is used for overflow */
@@ -175,7 +175,7 @@
     
     /* Amenity Checkbox Options */
     .amenity-option {
-      display: inline-block; /* Changed to inline-block to keep checkbox and label in one line */
+      display: inline-block; /* Keeps checkbox and label on the same line */
       margin-right: 10px;
       vertical-align: middle;
       white-space: nowrap;
