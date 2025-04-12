@@ -50,7 +50,7 @@
     }
     .max-filter-item label {
       margin-bottom: 4px;
-      font-weight: normal; /* Not bold */
+      font-weight: normal;
     }
     input[type="number"] {
       width: 150px;
@@ -100,7 +100,7 @@
   </style>
   
   <script>
-    // Firebase configuration – replace these values with your project's config
+    // Firebase configuration – replace with your project's configuration if needed
     const firebaseConfig = {
       apiKey: "AIzaSyAcRL-9n99aA0HPjPQKA8OlTHMzWQD1vBQ",
       authDomain: "nyc-apt-tracker.firebaseapp.com",
@@ -109,7 +109,7 @@
       messagingSenderId: "176381773971",
       appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
     };
-    // Initialize Firebase and Firestore using compat SDK
+    // Initialize Firebase and Firestore
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
   </script>
@@ -130,7 +130,7 @@
       </select>
       <button id="sortBtn">Sort</button>
     </div>
-
+    
     <!-- Filter Controls -->
     <div id="filterControls">
       <div>
@@ -176,7 +176,7 @@
       <button id="filterBtn">Apply Filters</button>
       <button id="clearFiltersBtn">Clear Filters</button>
     </div>
-
+    
     <table id="listingsTable">
       <thead>
         <tr>
@@ -229,6 +229,7 @@
       </tbody>
     </table>
   </div>
+  
   <footer class="footer">
     <p>&copy; 2025 NYC Apartment Finder</p>
   </footer>
@@ -236,17 +237,17 @@
   <script>
     // Global array to hold listings (each listing includes its Firestore document ID)
     let listings = [];
-
+    
     // --- FIRESTORE FUNCTIONS ---
-
-    // Load listings from Firestore and update the global listings array.
+    
+    // Load listings from Firestore
     async function loadListings() {
       try {
         const querySnapshot = await db.collection("listings").get();
         listings = [];
         querySnapshot.forEach(doc => {
           let data = doc.data();
-          data.id = doc.id; // store Firestore document ID for update/delete actions
+          data.id = doc.id;
           listings.push(data);
         });
         refreshTable();
@@ -254,15 +255,16 @@
         console.error("Error loading listings: ", error);
       }
     }
-
-    // Add a new listing to Firestore.
+    
+    // Add a new listing to Firestore
     async function addNewListingHandler() {
+      console.log("Add button clicked");
       let price = document.getElementById('newPrice').value.trim();
       let location = document.getElementById('newLocation').value.trim();
       let neighborhood = document.getElementById('newNeighborhood').value.trim();
       let bathrooms = document.getElementById('newBathrooms').value.trim();
       let bedrooms = document.getElementById('newBedrooms').value.trim();
-
+      
       if (!location) {
         alert("Please enter the apartment location so travel links can be generated.");
         return;
@@ -274,12 +276,12 @@
       let originalUrl = document.getElementById('newOriginalUrl').value.trim();
       let notes = document.getElementById('newNotes').value.trim();
       let amenities = getSelectedAmenities(document.getElementById("newAmenitiesCell")) || 'N/A';
-
+      
       if (!price && !neighborhood) {
         alert("Please fill in at least one of Price or Neighborhood.");
         return;
       }
-
+      
       let newListing = {
         price: price || 'N/A',
         location: location || 'N/A',
@@ -292,7 +294,7 @@
         originalUrl: originalUrl || 'N/A',
         notes: notes || ''
       };
-
+      
       try {
         await db.collection("listings").add(newListing);
         loadListings();
@@ -310,7 +312,7 @@
       document.getElementById('newOriginalUrl').value = '';
       document.getElementById('newNotes').value = '';
     }
-
+    
     // Update an existing listing in Firestore.
     async function updateListing(index, updatedListing) {
       let docId = listings[index].id;
@@ -321,7 +323,7 @@
         console.error("Error updating listing: ", error);
       }
     }
-
+    
     // Delete a listing from Firestore.
     async function deleteListing(index) {
       let docId = listings[index].id;
@@ -332,16 +334,14 @@
         console.error("Error deleting listing: ", error);
       }
     }
-
-    // --- HELPER FUNCTIONS (Same for both local display and filtering) ---
-
-    // Build a Google Maps directions URL.
+    
+    // --- HELPER FUNCTIONS ---
+    
     function buildGoogleMapsLink(origin, destination) {
       return "https://www.google.com/maps/dir/" +
              encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
     }
-
-    // Returns a sortable numeric value from a field. If value starts with "http", returns Infinity.
+    
     function getSortableValue(value) {
       if (value.trim().toLowerCase().startsWith("http")) {
         return Infinity;
@@ -349,8 +349,7 @@
       let num = parseFloat(value.replace(/[^0-9.]/g, ""));
       return isNaN(num) ? 0 : num;
     }
-
-    // Create a table cell for a distance value.
+    
     function createDistanceCell(value) {
       let td = document.createElement('td');
       if (value.trim().toLowerCase().startsWith("http")) {
@@ -364,15 +363,13 @@
       }
       return td;
     }
-
-    // Create a table cell with plain text.
+    
     function createTextCell(content) {
       let td = document.createElement('td');
       td.innerHTML = content;
       return td;
     }
-
-    // Create a table cell with an input field.
+    
     function createInputCell(value, type = 'text') {
       let td = document.createElement('td');
       let input = document.createElement('input');
@@ -381,10 +378,9 @@
       td.appendChild(input);
       return td;
     }
-
+    
     // --- FILTERING FUNCTIONS ---
-
-    // Update the Neighborhood filter options.
+    
     function updateNeighborhoodFilterOptions() {
       let select = document.getElementById("filterNeighborhood");
       let currentSelection = select.value;
@@ -407,10 +403,10 @@
         select.value = "All";
       }
     }
-
-    // Filter listings based on Neighborhood, Amenities, and maximum values.
+    
     function getFilteredListings() {
       let arr = listings.map((item, idx) => ({ item, idx }));
+      
       // Neighborhood Filter.
       let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
       if (selectedNeighborhood !== "all") {
@@ -419,6 +415,7 @@
           return listingNeighborhood === selectedNeighborhood;
         });
       }
+      
       // Amenities Filter.
       let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
       let selectedAmenities = [];
@@ -431,6 +428,7 @@
           return selectedAmenities.every(am => listAmenities.includes(am));
         });
       }
+      
       // Maximum Price Filter.
       let maxPriceFilter = document.getElementById('filterMaxPrice').value.trim();
       if (maxPriceFilter !== "") {
@@ -440,6 +438,7 @@
           return !isNaN(priceValue) && priceValue <= maxPrice;
         });
       }
+      
       // Maximum Distance to GS Filter.
       let maxDistanceGSFilter = document.getElementById('filterMaxDistanceGS').value.trim();
       if (maxDistanceGSFilter !== "") {
@@ -452,6 +451,7 @@
           return !isNaN(numericDistance) && numericDistance <= maxDistanceGS;
         });
       }
+      
       // Maximum Distance to BTG Filter.
       let maxDistanceBTGFilter = document.getElementById('filterMaxDistanceBTG').value.trim();
       if (maxDistanceBTGFilter !== "") {
@@ -466,9 +466,9 @@
       }
       return arr;
     }
-
+    
     // --- DISPLAY FUNCTIONS ---
-
+    
     function createRow(listing, index) {
       let tr = document.createElement('tr');
       tr.setAttribute('data-index', index);
@@ -478,8 +478,10 @@
       tr.appendChild(createTextCell(listing.neighborhood));
       tr.appendChild(createTextCell(listing.bathrooms));
       tr.appendChild(createTextCell(listing.bedrooms));
+      
       tr.appendChild(createDistanceCell(listing.distanceToWorkX));
       tr.appendChild(createDistanceCell(listing.distanceToWorkY));
+      
       tr.appendChild(createTextCell(listing.amenities));
       
       let originalUrlCell = document.createElement('td');
@@ -516,7 +518,6 @@
     function refreshTable() {
       updateNeighborhoodFilterOptions();
       const tbody = document.querySelector('#listingsTable tbody');
-      // Remove all rows except the new listing row.
       Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
         if (tr.id !== 'newListingRow') {
           tr.remove();
@@ -618,9 +619,7 @@
         checkbox.type = 'checkbox';
         checkbox.value = option;
         let selectedAmenities = listing.amenities.split(',').map(a => a.trim());
-        if (selectedAmenities.includes(option)) { 
-          checkbox.checked = true; 
-        }
+        if (selectedAmenities.includes(option)) { checkbox.checked = true; }
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(option));
         amenitiesTd.appendChild(label);
