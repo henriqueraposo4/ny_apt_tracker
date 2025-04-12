@@ -211,9 +211,10 @@
     const db = firebase.firestore();
 
     // Define global variables: target addresses and amenity options.
+    // Replace "Pool" with "Elevator" here.
     const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
     const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
-    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Pool"];
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Elevator"];
 
     // Global array to hold listings (each listing includes its Firestore document ID).
     let listings = [];
@@ -269,7 +270,7 @@
             <input type="checkbox" value="Game room">Game room
           </label>
           <label>
-            <input type="checkbox" value="Pool">Pool
+            <input type="checkbox" value="Elevator">Elevator
           </label>
         </span>
       </div>
@@ -334,7 +335,7 @@
                 <input type="checkbox" value="Game room">Game room
               </label>
               <label class="amenity-option">
-                <input type="checkbox" value="Pool">Pool
+                <input type="checkbox" value="Elevator">Elevator
               </label>
             </td>
             <td><input type="url" id="newOriginalUrl" placeholder="Original URL"></td>
