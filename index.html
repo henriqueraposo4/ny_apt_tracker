@@ -49,7 +49,7 @@
     
     /* Container */
     .container {
-      max-width: 1300px; /* Changed from 1400px to 1300px */
+      max-width: 1300px;
       margin: 40px auto;
       background: #fff;
       padding: 20px 30px;
@@ -78,11 +78,10 @@
       margin-right: 10px;
     }
     #filterAmenities label {
-      margin-right: 10px;
-      /* Display inline-block so that checkbox and text remain on one line */
       display: inline-block;
+      margin-right: 10px;
       font-weight: 400;
-      white-space: nowrap;
+      white-space: nowrap; /* Keeps checkbox text on one line */
     }
     .max-filter-container {
       display: flex;
@@ -101,14 +100,14 @@
     /* Responsive Table Container */
     .table-responsive {
       width: 100%;
-      overflow-x: auto; /* Enable horizontal scrolling if table is too wide */
+      overflow-x: auto; /* Horizontal scrolling if needed */
       margin-top: 20px;
     }
     
     /* Table Styling */
     table {
       width: 100%;
-      min-width: 900px; /* Ensures the table columns don't become too compressed */
+      min-width: 900px; /* Ensures table doesn't become too cramped */
       border-collapse: collapse;
       background: #fff;
       border-radius: 6px;
@@ -118,6 +117,7 @@
       text-align: left;
       padding: 14px;
       border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
     }
     th {
       background: #f7f7f7;
@@ -130,14 +130,7 @@
       background: #f1f5f8;
     }
     
-    /* Specific Column Adjustments */
-    /* Amenities column (8th column) adjusted to have a minimum width of 80px */
-    table th:nth-child(8),
-    table td:nth-child(8) {
-      min-width: 80px;
-      white-space: nowrap;
-    }
-    /* Original URL column (9th column) is made smaller and ellipsis is used for overflow */
+    /* Keep the Original URL column narrower */
     table th:nth-child(9),
     table td:nth-child(9) {
       max-width: 120px;
@@ -146,7 +139,7 @@
       white-space: nowrap;
     }
     
-    /* Form Inputs */
+    /* Inputs and Buttons */
     input[type="text"],
     input[type="url"],
     input[type="number"] {
@@ -157,8 +150,6 @@
       box-sizing: border-box;
       font-size: 1em;
     }
-    
-    /* Buttons */
     button {
       padding: 8px 16px;
       background: #667eea;
@@ -173,11 +164,9 @@
       background: #556cd6;
     }
     
-    /* Amenity Checkbox Options */
     .amenity-option {
-      display: inline-block; /* Keeps checkbox and label on the same line */
+      display: inline-block;
       margin-right: 10px;
-      vertical-align: middle;
       white-space: nowrap;
     }
     
@@ -321,7 +310,7 @@
             <td><input type="number" id="newBedrooms" placeholder="Bedrooms"></td>
             <td>Auto-generated</td>
             <td>Auto-generated</td>
-            <!-- Amenities: Pre-defined checkboxes (stacked inline now) -->
+            <!-- Amenities: Pre-defined checkboxes (inline) -->
             <td id="newAmenitiesCell">
               <label class="amenity-option">
                 <input type="checkbox" value="Laundry Room">Laundry Room
@@ -523,7 +512,7 @@
     function getFilteredListings() {
       let arr = listings.map((item, idx) => ({ item, idx }));
       
-      // Neighborhood Filter.
+      // Neighborhood Filter
       let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
       if (selectedNeighborhood !== "all") {
         arr = arr.filter(obj => {
@@ -532,7 +521,7 @@
         });
       }
       
-      // Amenities Filter.
+      // Amenities Filter
       let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
       let selectedAmenities = [];
       amenityCheckboxes.forEach(cb => {
@@ -545,7 +534,7 @@
         });
       }
       
-      // Maximum Price Filter.
+      // Max Price Filter
       let maxPriceFilter = document.getElementById('filterMaxPrice').value.trim();
       if (maxPriceFilter !== "") {
         let maxPrice = parseFloat(maxPriceFilter);
@@ -555,7 +544,7 @@
         });
       }
       
-      // Maximum Distance to GS Filter.
+      // Max Distance to GS Filter
       let maxDistanceGSFilter = document.getElementById('filterMaxDistanceGS').value.trim();
       if (maxDistanceGSFilter !== "") {
         let maxDistanceGS = parseFloat(maxDistanceGSFilter);
@@ -568,7 +557,7 @@
         });
       }
       
-      // Maximum Distance to BTG Filter.
+      // Max Distance to BTG Filter
       let maxDistanceBTGFilter = document.getElementById('filterMaxDistanceBTG').value.trim();
       if (maxDistanceBTGFilter !== "") {
         let maxDistanceBTG = parseFloat(maxDistanceBTGFilter);
