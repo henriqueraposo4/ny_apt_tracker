@@ -81,7 +81,7 @@
       display: inline-block;
       margin-right: 10px;
       font-weight: 400;
-      white-space: nowrap; /* Keeps checkbox text on one line */
+      white-space: nowrap;
     }
     .max-filter-container {
       display: flex;
@@ -107,7 +107,7 @@
     /* Table Styling */
     table {
       width: 100%;
-      min-width: 900px; /* Ensures table doesn't become too cramped */
+      min-width: 900px;
       border-collapse: collapse;
       background: #fff;
       border-radius: 6px;
@@ -217,6 +217,15 @@
 
     // Global array to hold listings (each listing includes its Firestore document ID).
     let listings = [];
+
+    // FORMAT THE PRICE INTO DOLLAR FORMAT, E.G. 3973 -> "$3,973"
+    function formatPrice(price) {
+      let number = parseFloat(price.replace(/[^0-9.]/g, ""));
+      if (isNaN(number)) {
+        return price;
+      }
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+    }
   </script>
 </head>
 <body>
@@ -512,7 +521,7 @@
     function getFilteredListings() {
       let arr = listings.map((item, idx) => ({ item, idx }));
       
-      // Neighborhood Filter
+      // Neighborhood Filter.
       let selectedNeighborhood = document.getElementById('filterNeighborhood').value.trim().toLowerCase();
       if (selectedNeighborhood !== "all") {
         arr = arr.filter(obj => {
@@ -521,7 +530,7 @@
         });
       }
       
-      // Amenities Filter
+      // Amenities Filter.
       let amenityCheckboxes = document.getElementById("filterAmenities").querySelectorAll('input[type="checkbox"]');
       let selectedAmenities = [];
       amenityCheckboxes.forEach(cb => {
@@ -534,7 +543,7 @@
         });
       }
       
-      // Max Price Filter
+      // Maximum Price Filter.
       let maxPriceFilter = document.getElementById('filterMaxPrice').value.trim();
       if (maxPriceFilter !== "") {
         let maxPrice = parseFloat(maxPriceFilter);
@@ -544,7 +553,7 @@
         });
       }
       
-      // Max Distance to GS Filter
+      // Maximum Distance to GS Filter.
       let maxDistanceGSFilter = document.getElementById('filterMaxDistanceGS').value.trim();
       if (maxDistanceGSFilter !== "") {
         let maxDistanceGS = parseFloat(maxDistanceGSFilter);
@@ -557,7 +566,7 @@
         });
       }
       
-      // Max Distance to BTG Filter
+      // Maximum Distance to BTG Filter.
       let maxDistanceBTGFilter = document.getElementById('filterMaxDistanceBTG').value.trim();
       if (maxDistanceBTGFilter !== "") {
         let maxDistanceBTG = parseFloat(maxDistanceBTGFilter);
@@ -579,7 +588,9 @@
       let tr = document.createElement('tr');
       tr.setAttribute('data-id', listing.id);
       
-      tr.appendChild(createTextCell(listing.price));
+      // Apply formatted price using formatPrice()
+      tr.appendChild(createTextCell(formatPrice(listing.price)));
+      
       tr.appendChild(createTextCell(listing.location));
       tr.appendChild(createTextCell(listing.neighborhood));
       tr.appendChild(createTextCell(listing.bathrooms));
