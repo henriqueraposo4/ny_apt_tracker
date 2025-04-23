@@ -213,241 +213,328 @@
       messagingSenderId: "176381773971",
       appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
     };
-
-    // Initialize Firebase and Firestore using compat libraries.
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Define global variables: target addresses and amenity options.
+    // Globals
     const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
     const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
     const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Elevator"];
-
-    // Global array to hold listings (each listing includes its Firestore document ID).
     let listings = [];
 
-    // FORMAT THE PRICE INTO DOLLAR FORMAT, E.G. 3973 -> "$3,973"
+    // Format price
     function formatPrice(price) {
-      let number = parseFloat(price.replace(/[^0-9.]/g, ""));
-      if (isNaN(number)) {
-        return price;
-      }
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+      let num = parseFloat(price.replace(/[^0-9.]/g, ""));
+      if (isNaN(num)) return price;
+      return new Intl.NumberFormat('en-US', {style:'currency',currency:'USD',maximumFractionDigits:0}).format(num);
     }
 
+    // Build map link
+    function buildGoogleMapsLink(o, d) {
+      return `https://www.google.com/maps/dir/${encodeURIComponent(o)}/${encodeURIComponent(d)}/`;
+    }
+    function getSelectedAmenities(container) {
+      return Array.from(container.querySelectorAll('input[type="checkbox"]:checked'))
+                  .map(cb => cb.value).join(', ');
+    }
+    function clearFilters() {
+      document.getElementById('filterNeighborhood').value = "All";
+      document.getElementById('filterMaxPrice').value = "";
+      document.getElementById('filterMaxDistanceGS').value = "";
+      document.getElementById('filterMaxDistanceBTG').value = "";
+      document.getElementById('filterFavorites').checked = false;
+      document.querySelectorAll('#filterAmenities input').forEach(cb => cb.checked = false);
+    }
 
-    // --- FIRESTORE FUNCTIONS ---
+    // Firestore CRUD
     async function loadListings() {
       try {
-        const querySnapshot = await db.collection("listings").get();
-        listings = [];
-        querySnapshot.forEach(doc => {
-          let data = doc.data();
-          data.id = doc.id;
-          data.favorite = data.favorite || false;
-          listings.push(data);
+        const snap = await db.collection("listings").get();
+        listings = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id:       d.id,
+            price:    data.price || '',
+            location: data.location || '',
+            neighborhood: data.neighborhood || '',
+            bathrooms:    data.bathrooms || 0,
+            bedrooms:     data.bedrooms || 0,
+            distanceToWorkX: data.distanceToWorkX || '',
+            distanceToWorkY: data.distanceToWorkY || '',
+            amenities:      data.amenities || '',
+            originalUrl:    data.originalUrl || '',
+            notes:          data.notes || '',
+            favorite:       data.favorite || false
+          };
         });
         refreshTable();
-      } catch (error) {
-        console.error("Error loading listings: ", error);
+      } catch(e) {
+        console.error(e);
       }
     }
-    
+
     async function addNewListingHandler() {
-      let price = document.getElementById('newPrice').value.trim();
-      let location = document.getElementById('newLocation').value.trim();
-      if (!location) {
-        alert("Please enter the apartment location so travel links can be generated.");
-        return;
-      }
-      const linkGS = buildGoogleMapsLink(location, workAddressX);
-      const linkBTG = buildGoogleMapsLink(location, workAddressY);
-      let newListing = {
-        price: price || 'N/A',
-        location: location,
+      const loc = document.getElementById('newLocation').value.trim();
+      if (!loc) return alert("Please enter the apartment location.");
+      const doc = {
+        price:    document.getElementById('newPrice').value.trim() || 'N/A',
+        location: loc,
         neighborhood: document.getElementById('newNeighborhood').value.trim() || 'N/A',
-        bathrooms: +document.getElementById('newBathrooms').value || 0,
-        bedrooms: +document.getElementById('newBedrooms').value || 0,
-        distanceToWorkX: linkGS,
-        distanceToWorkY: linkBTG,
-        amenities: getSelectedAmenities(document.getElementById("newAmenitiesCell")) || 'N/A',
-        originalUrl: document.getElementById('newOriginalUrl').value.trim() || 'N/A',
-        notes: document.getElementById('newNotes').value.trim() || '',
-        favorite: false
+        bathrooms:    +document.getElementById('newBathrooms').value || 0,
+        bedrooms:     +document.getElementById('newBedrooms').value || 0,
+        distanceToWorkX: buildGoogleMapsLink(loc, workAddressX),
+        distanceToWorkY: buildGoogleMapsLink(loc, workAddressY),
+        amenities:      getSelectedAmenities(document.getElementById("newAmenitiesCell")) || 'N/A',
+        originalUrl:    document.getElementById('newOriginalUrl').value.trim() || 'N/A',
+        notes:          document.getElementById('newNotes').value.trim() || '',
+        favorite:       false
       };
-      try {
-        await db.collection("listings").add(newListing);
-        clearFilters();
-        loadListings();
-      } catch (error) {
-        console.error("Error adding listing: ", error);
-      }
+      await db.collection("listings").add(doc);
+      clearFilters();
+      loadListings();
       ['newPrice','newLocation','newNeighborhood','newBathrooms','newBedrooms','newOriginalUrl','newNotes']
         .forEach(id => document.getElementById(id).value = '');
-      document.querySelectorAll("#newAmenitiesCell input[type='checkbox']").forEach(cb => cb.checked = false);
+      document.querySelectorAll("#newAmenitiesCell input").forEach(cb=>cb.checked=false);
     }
-    
-    async function updateListingById(docId, updatedListing) {
-      try {
-        await db.collection("listings").doc(docId).update(updatedListing);
-        loadListings();
-      } catch (error) {
-        console.error("Error updating listing: ", error);
+
+    async function updateListingById(id, upd) {
+      await db.collection("listings").doc(id).update(upd);
+      loadListings();
+    }
+    async function deleteListingById(id) {
+      await db.collection("listings").doc(id).delete();
+      loadListings();
+    }
+
+    // Create <td><input>…</td>
+    function createInputCell(val, type='text') {
+      const td = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = type; inp.value = val;
+      td.appendChild(inp);
+      return td;
+    }
+
+    // Enter edit mode
+    function enableEditing(row, id) {
+      const it = listings.find(x=>x.id===id);
+      if(!it) return;
+      row.innerHTML='';
+      // text inputs
+      const pc = createInputCell(it.price);
+      const lc = createInputCell(it.location);
+      const nc = createInputCell(it.neighborhood);
+      const bc = createInputCell(it.bathrooms,'number');
+      const bedc = createInputCell(it.bedrooms,'number');
+      const gsc = createInputCell(it.distanceToWorkX);
+      const btc = createInputCell(it.distanceToWorkY);
+      row.append(pc,lc,nc,bc,bedc,gsc,btc);
+      // amenities
+      const atd = document.createElement('td');
+      amenityOptions.forEach(o=>{
+        const lab = document.createElement('label');
+        lab.className='amenity-option';
+        const cb = document.createElement('input');
+        cb.type='checkbox'; cb.value=o;
+        if(it.amenities.split(',').map(a=>a.trim()).includes(o)) cb.checked=true;
+        lab.append(cb,document.createTextNode(o));
+        atd.appendChild(lab);
+      });
+      row.appendChild(atd);
+      // url & notes
+      const utd = createInputCell(it.originalUrl,'url');
+      const nd  = createInputCell(it.notes);
+      row.append(utd, nd);
+      // actions
+      const actionTd = document.createElement('td');
+      // Save
+      const save = document.createElement('button');
+      save.textContent='Save';
+      save.addEventListener('click',()=>{
+        const upd = {
+          price:    pc.querySelector('input').value || 'N/A',
+          location: lc.querySelector('input').value || 'N/A',
+          neighborhood: nc.querySelector('input').value || 'N/A',
+          bathrooms:    parseInt(bc.querySelector('input').value,10)||0,
+          bedrooms:     parseInt(bedc.querySelector('input').value,10)||0,
+          distanceToWorkX: gsc.querySelector('input').value||'N/A',
+          distanceToWorkY: btc.querySelector('input').value||'N/A',
+          amenities: Array.from(atd.querySelectorAll('input:checked')).map(cb=>cb.value).join(', ')||'N/A',
+          originalUrl:    utd.querySelector('input').value||'N/A',
+          notes:          nd.querySelector('input').value||'',
+          favorite:       it.favorite
+        };
+        updateListingById(id, upd);
+      });
+      actionTd.appendChild(save);
+      // Cancel
+      const cancel = document.createElement('button');
+      cancel.textContent='Cancel';
+      cancel.addEventListener('click',refreshTable);
+      actionTd.appendChild(cancel);
+      // Delete
+      const del = document.createElement('button');
+      del.textContent='Delete';
+      del.addEventListener('click',()=>{ if(confirm("Delete?")) deleteListingById(id); });
+      actionTd.appendChild(del);
+      row.appendChild(actionTd);
+    }
+
+    // Filter + display
+    function getFilteredListings() {
+      let arr = listings.slice();
+      // favorite filter
+      if(document.getElementById('filterFavorites').checked) {
+        arr = arr.filter(x=>x.favorite);
       }
-    }
-    
-    async function deleteListingById(docId) {
-      try {
-        await db.collection("listings").doc(docId).delete();
-        loadListings();
-      } catch (error) {
-        console.error("Error deleting listing: ", error);
+      // neighborhood
+      const nf = document.getElementById('filterNeighborhood').value.toLowerCase();
+      if(nf!=='all') arr = arr.filter(x=>x.neighborhood.toLowerCase()===nf);
+      // amenities
+      const reqA = Array.from(document.querySelectorAll('#filterAmenities input:checked')).map(cb=>cb.value.toLowerCase());
+      if(reqA.length){
+        arr = arr.filter(x=>{
+          const have = x.amenities.toLowerCase().split(',').map(a=>a.trim());
+          return reqA.every(a=>have.includes(a));
+        });
       }
-    }
-    
-    // --- HELPER FUNCTIONS ---
-    function buildGoogleMapsLink(origin, destination) {
-      return "https://www.google.com/maps/dir/" +
-             encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
-    }
-    
-    function getSortableValue(value) {
-      if (value.trim().toLowerCase().startsWith("http")) {
-        return Infinity;
+      // max price
+      const mp = parseFloat(document.getElementById('filterMaxPrice').value);
+      if(!isNaN(mp)){
+        arr = arr.filter(x=>{
+          const p = parseFloat(x.price.replace(/[^0-9.]/g,''))||0;
+          return p<=mp;
+        });
       }
-      let num = parseFloat(value.replace(/[^0-9.]/g, ""));
-      return isNaN(num) ? 0 : num;
+      // max GS dist
+      const mg = parseFloat(document.getElementById('filterMaxDistanceGS').value);
+      if(!isNaN(mg)){
+        arr = arr.filter(x=>{
+          if(x.distanceToWorkX.startsWith('http')) return true;
+          const d = parseFloat(x.distanceToWorkX.replace(/[^0-9.]/g,''))||0;
+          return d<=mg;
+        });
+      }
+      // max BTG dist
+      const mb = parseFloat(document.getElementById('filterMaxDistanceBTG').value);
+      if(!isNaN(mb)){
+        arr = arr.filter(x=>{
+          if(x.distanceToWorkY.startsWith('http')) return true;
+          const d = parseFloat(x.distanceToWorkY.replace(/[^0-9.]/g,''))||0;
+          return d<=mb;
+        });
+      }
+      return arr.map(item=>({ item }));
     }
-    
+
     function createDistanceCell(value) {
-      let td = document.createElement('td');
-      if (value.trim().toLowerCase().startsWith("http")) {
-        let a = document.createElement("a");
-        a.href = value;
-        a.target = "_blank";
-        a.textContent = "View Route";
+      const td = document.createElement('td');
+      if (value.startsWith('http')) {
+        const a = document.createElement('a');
+        a.href = value; a.textContent = 'View Route'; a.target = '_blank';
         td.appendChild(a);
       } else {
         td.textContent = value;
       }
       return td;
     }
-    
+
     function createTextCell(content) {
-      let td = document.createElement('td');
+      const td = document.createElement('td');
       td.innerHTML = content;
       return td;
     }
-    
-    function createInputCell(value, type = 'text') {
-      let td = document.createElement('td');
-      let input = document.createElement('input');
-      input.type = type;
-      input.value = value;
-      td.appendChild(input);
-      return td;
-    }
 
-    // ————————————————————————————————
-    // Full edit mode, preserving favorite status
-    function enableEditing(row, docId) {
-      const listing = listings.find(l => l.id === docId);
-      if (!listing) return console.error("Listing not found");
-      row.innerHTML = '';
+    function createRow(listing) {
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-id', listing.id);
 
-      // Editable cells
-      const priceCell    = createInputCell(listing.price);
-      const locationCell = createInputCell(listing.location);
-      const neighCell    = createInputCell(listing.neighborhood);
-      const bathCell     = createInputCell(listing.bathrooms, 'number');
-      const bedCell      = createInputCell(listing.bedrooms,  'number');
-      const gsCell       = createInputCell(listing.distanceToWorkX);
-      const btgCell      = createInputCell(listing.distanceToWorkY);
-      row.append(priceCell, locationCell, neighCell, bathCell, bedCell, gsCell, btgCell);
-
-      // Amenities
-      const amenitiesTd = document.createElement('td');
-      amenityOptions.forEach(opt => {
-        const label = document.createElement('label');
-        label.className = 'amenity-option';
-        const cb = document.createElement('input');
-        cb.type  = 'checkbox';
-        cb.value = opt;
-        if (listing.amenities.split(',').map(a=>a.trim()).includes(opt)) cb.checked = true;
-        label.append(cb, document.createTextNode(opt));
-        amenitiesTd.appendChild(label);
-      });
-      row.appendChild(amenitiesTd);
-
-      // URL & Notes
-      const urlCell   = createInputCell(listing.originalUrl, 'url');
-      const notesCell = createInputCell(listing.notes);
-      row.append(urlCell, notesCell);
-
-      // Actions: Save, Cancel, Delete
+      // favorite star
       const actionTd = document.createElement('td');
-      // Save
-      const saveBtn = document.createElement('button');
-      saveBtn.textContent = 'Save';
-      saveBtn.addEventListener('click', () => {
-        const updated = {
-          price:    priceCell.querySelector('input').value.trim() || 'N/A',
-          location: locationCell.querySelector('input').value.trim() || 'N/A',
-          neighborhood: neighCell   .querySelector('input').value.trim() || 'N/A',
-          bathrooms:    parseInt(bathCell.querySelector('input').value, 10) || 0,
-          bedrooms:     parseInt(bedCell .querySelector('input').value, 10) || 0,
-          distanceToWorkX: gsCell .querySelector('input').value.trim() || 'N/A',
-          distanceToWorkY: btgCell.querySelector('input').value.trim() || 'N/A',
-          amenities: Array
-            .from(amenitiesTd.querySelectorAll('input[type="checkbox"]:checked'))
-            .map(cb => cb.value)
-            .join(', ') || 'N/A',
-          originalUrl: urlCell  .querySelector('input').value.trim() || 'N/A',
-          notes:       notesCell.querySelector('input').value.trim() || '',
-          favorite:    listing.favorite
-        };
-        updateListingById(docId, updated);
-      });
-      actionTd.appendChild(saveBtn);
+      const star = document.createElement('span');
+      star.className = 'favorite-indicator';
+      star.textContent = listing.favorite ? '★' : '☆';
+      actionTd.appendChild(star);
+      // favorite toggle
+      const favBtn = document.createElement('button');
+      favBtn.textContent = listing.favorite ? 'Unfavorite' : 'Favorite';
+      favBtn.addEventListener('click',()=>
+        updateListingById(listing.id, { favorite: !listing.favorite })
+      );
+      actionTd.appendChild(favBtn);
 
-      // Cancel
-      const cancelBtn = document.createElement('button');
-      cancelBtn.textContent = 'Cancel';
-      cancelBtn.addEventListener('click', refreshTable);
-      actionTd.appendChild(cancelBtn);
+      // the rest of cells
+      tr.appendChild(createTextCell(formatPrice(listing.price)));
+      tr.appendChild(createTextCell(listing.location));
+      tr.appendChild(createTextCell(listing.neighborhood));
+      tr.appendChild(createTextCell(listing.bathrooms));
+      tr.appendChild(createTextCell(listing.bedrooms));
+      tr.appendChild(createDistanceCell(listing.distanceToWorkX));
+      tr.appendChild(createDistanceCell(listing.distanceToWorkY));
+      tr.appendChild(createTextCell(listing.amenities));
+      // original url
+      const urlTd = document.createElement('td');
+      const a = document.createElement('a');
+      a.href = listing.originalUrl; a.textContent = 'link'; a.target = '_blank';
+      urlTd.appendChild(a);
+      tr.appendChild(urlTd);
+      tr.appendChild(createTextCell(listing.notes));
 
-      // Delete
+      // edit & delete
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click',()=> enableEditing(tr, listing.id));
+      actionTd.appendChild(editBtn);
       const delBtn = document.createElement('button');
       delBtn.textContent = 'Delete';
-      delBtn.addEventListener('click', () => {
-        if (confirm("Are you sure you want to delete this listing?")) {
-          deleteListingById(docId);
-        }
-      });
+      delBtn.addEventListener('click',()=>{ if(confirm("Delete?")) deleteListingById(listing.id); });
       actionTd.appendChild(delBtn);
 
-      row.appendChild(actionTd);
+      tr.appendChild(actionTd);
+      return tr;
     }
 
-    // --- DISPLAY FUNCTIONS ---
-    function createRow(listing) {
-      // … your existing createRow implementation …
-    }
     function refreshTable() {
-      // … your existing refreshTable implementation …
+      // repopulate neighborhoods
+      const sel = document.getElementById('filterNeighborhood');
+      const cur = sel.value;
+      const ns = Array.from(new Set(listings.map(x=>x.neighborhood).filter(n=>n)));
+      sel.innerHTML = '<option value="All">All</option>';
+      ns.forEach(n=>{
+        const o = document.createElement('option');
+        o.value = n; o.textContent = n;
+        sel.appendChild(o);
+      });
+      if(ns.includes(cur)) sel.value = cur;
+
+      // clear old rows
+      const tbody = document.querySelector('#listingsTable tbody');
+      Array.from(tbody.querySelectorAll('tr')).forEach(r=>{
+        if(r.id!=='newListingRow') r.remove();
+      });
+      // add new
+      getFilteredListings().forEach(o=>{
+        tbody.appendChild(createRow(o.item));
+      });
     }
 
-    // --- EVENT LISTENERS ---
-    document.getElementById('sortBtn').addEventListener('click', function() {
-      // … unchanged …
+    // Event listeners
+    document.getElementById('sortBtn').addEventListener('click',()=>{
+      const c = document.getElementById('sortCriteria').value;
+      listings.sort((a,b)=>{
+        const va = parseFloat(a[c].replace(/[^\d.]/g,''))||0;
+        const vb = parseFloat(b[c].replace(/[^\d.]/g,''))||0;
+        return va-vb;
+      });
+      refreshTable();
     });
-    document.getElementById('filterBtn').addEventListener('click', refreshTable);
-    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+    document.getElementById('filterBtn').addEventListener('click',refreshTable);
+    document.getElementById('clearFiltersBtn').addEventListener('click',()=>{
       clearFilters();
       refreshTable();
     });
-    document.getElementById('addListingBtn').addEventListener('click', addNewListingHandler);
-    window.addEventListener('load', loadListings);
+    document.getElementById('addListingBtn').addEventListener('click',addNewListingHandler);
+    window.addEventListener('load',loadListings);
   </script>
 </body>
 </html>
