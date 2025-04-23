@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NYC Apartment Finder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
+  <style>
+    /* existing CSS styles... */
+  </style>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcRL-9n99a0HPjPQKA8OlTHMzWQD1vBQ",
+      authDomain: "nyc-apt-tracker.firebaseapp.com",
+      projectId: "nyc-apt-tracker",
+      storageBucket: "nyc-apt-tracker.appspot.com",
+      messagingSenderId: "176381773971",
+      appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
+    const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Elevator"];
+    let listings = [];
+
+    function formatPrice(price) {
+      let number = parseFloat(price.replace(/[^0-9.]/g, ""));
+      if (isNaN(number)) return price;
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+    }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>NYC Apartment Finder</h1>
+    <p>Helping you decide where to live in New York City.</p>
+  </header>
+  <div class="container">
+    <div id="sortControls">
+      <span>Sort by:</span>
+      <select id="sortCriteria">
+        <option value="price">Price</option>
+        <option value="distanceToWorkX">Distance to GS</option>
+        <option value="distanceToWorkY">Distance to BTG</option>
+      </select>
+      <button id="sortBtn">Sort</button>
+    </div>
+    <div id="filterControls">
+      <!-- existing filters -->
+      <div class="max-filter-item">
+        <label>
+          <input type="checkbox" id="filterFavorites"> Favorites Only
+        </label>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table id="listingsTable">
+        <thead>
+          <tr>
+            <th>Price</th><th>Location</th><th>Neighborhood</th><th>Bathrooms</th><th>Bedrooms</th>
+            <th>Distance to GS</th><th>Distance to BTG</th><th>Amenities</th><th>Original URL</th>
+            <th>Notes</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Add listing input row here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <footer class="footer">
+    <p>&copy; 2025 NYC Apartment Finder</p>
+  </footer>
+  <script>
+    async function loadListings() {
+      try {
+        const querySnapshot = await db.collection("listings").get();
+        listings = [];
+        querySnapshot.forEach(doc => {
+          let data = doc.data();
+          data.id = doc.id;
+          listings.push(data);
+        });
+        refreshTable();
+      } catch (error) {
+        console.error("Error loading listings:", error);
+      }
+    }
+
+    async function updateListingById(docId, updatedListing) {
+      try {
+        await db.collection("listings").doc(docId).update(updatedListing);
+        loadListings();
+      } catch (error) {
+        console.error("Error updating listing:", error);
+      }
+    }
+
+    function createRow(listing, index) {
+      let tr = document.createElement('tr');
+      tr.setAttribute('data-id', listing.id);
+
+      let priceCell = document.createElement('td');
+      if (listing.favorite) {
+        let star = document.createElement('span');
+        star.textContent = '★';
+        star.style.color = '#ffcc00';
+        star.style.marginRight = '5px';
+        priceCell.appendChild(star);
+      }
+      priceCell.appendChild(document.createTextNode(formatPrice(listing.price)));
+      tr.appendChild(priceCell);
+
+      tr.appendChild(createTextCell(listing.location));
+      tr.appendChild(createTextCell(listing.neighborhood));
+      tr.appendChild(createTextCell(listing.bathrooms));
+      tr.appendChild(createTextCell(listing.bedrooms));
+      tr.appendChild(createDistanceCell(listing.distanceToWorkX));
+      tr.appendChild(createDistanceCell(listing.distanceToWorkY));
+      tr.appendChild(createTextCell(listing.amenities));
+
+      let originalUrlCell = document.createElement('td');
+      let linkURL = document.createElement('a');
+      linkURL.href = listing.originalUrl;
+      linkURL.textContent = "link";
+      linkURL.target = "_blank";
+      originalUrlCell.appendChild(linkURL);
+      tr.appendChild(originalUrlCell);
+
+      tr.appendChild(createTextCell(listing.notes));
+
+      let actionCell = document.createElement('td');
+      let favBtn = document.createElement('button');
+      favBtn.textContent = listing.favorite ? '★ Unfavorite' : '☆ Favorite';
+      favBtn.addEventListener('click', function() {
+        updateListingById(listing.id, { favorite: !listing.favorite });
+      });
+      actionCell.appendChild(favBtn);
+      tr.appendChild(actionCell);
+
+      return tr;
+    }
+
+    function getFilteredListings() {
+      let arr = listings.map((item, idx) => ({ item, idx }));
+      if (document.getElementById("filterFavorites").checked) {
+        arr = arr.filter(obj => obj.item.favorite === true);
+      }
+      return arr;
+    }
+
+    function refreshTable() {
+      const tbody = document.querySelector('#listingsTable tbody');
+      Array.from(tbody.querySelectorAll('tr')).forEach(tr => tr.remove());
+      let filtered = getFilteredListings();
+      filtered.forEach(obj => {
+        let row = createRow(obj.item, obj.idx);
+        tbody.appendChild(row);
+      });
+    }
+
+    window.addEventListener('load', loadListings);
+  </script>
+</body>
+</html>
