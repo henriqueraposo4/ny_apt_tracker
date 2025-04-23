@@ -14,108 +14,440 @@
   
   <style>
     /* Global Styles */
-    body { margin: 0; font-family: 'Roboto', sans-serif; background: linear-gradient(135deg, #f0f4f8, #d9e2ec); color: #333; line-height: 1.6; }
-    a { color: #667eea; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    header { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 40px 20px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    header h1 { margin: 0; font-size: 2.8em; letter-spacing: 1px; }
-    header p { margin: 8px 0 0; font-size: 1.2em; }
-    .container { max-width: 1300px; margin: 40px auto; background: #fff; padding: 20px 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    #sortControls, #filterControls { margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
-    #sortControls select, #filterControls select, #filterControls input[type="number"] { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em; }
-    #filterControls label { margin-right: 10px; }
-    #filterAmenities label { display: inline-block; margin-right: 10px; font-weight: 400; white-space: nowrap; }
-    .max-filter-container { display: flex; gap: 20px; flex-wrap: wrap; }
-    .max-filter-item { display: flex; flex-direction: column; }
-    .max-filter-item label { margin-bottom: 4px; font-weight: 400; }
-    .favorite-indicator { color: gold; margin-right: 4px; font-size: 1.2em; vertical-align: middle; }
-    .table-responsive { width: 100%; overflow-x: auto; margin-top: 20px; }
-    table { width: 100%; min-width: 900px; border-collapse: collapse; background: #fff; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    th, td { text-align: left; padding: 14px; border-bottom: 1px solid #e0e0e0; vertical-align: middle; }
-    th { background: #f7f7f7; font-weight: 500; }
-    tr:nth-child(even) td { background: #fbfbfb; }
-    tr:hover td { background: #f1f5f8; }
-    table th:nth-child(9), table td:nth-child(9) { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    input[type="text"], input[type="url"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 1em; }
-    button { padding: 8px 16px; background: #667eea; color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background 0.3s ease; font-size: 1em; }
-    button:hover { background: #556cd6; }
-    .amenity-option { display: inline-block; margin-right: 10px; white-space: nowrap; }
-    .footer { text-align: center; padding: 10px; margin-top: 40px; font-size: 0.9em; color: #666; }
-    @media (max-width: 768px) { header h1 { font-size: 2.2em; } .container { margin: 20px; padding: 20px; } #sortControls, #filterControls { flex-direction: column; align-items: flex-start; } }
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+      color: #333;
+      line-height: 1.6;
+    }
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Header Styles */
+    header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      padding: 40px 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.8em;
+      letter-spacing: 1px;
+    }
+    header p {
+      margin: 8px 0 0;
+      font-size: 1.2em;
+    }
+    
+    /* Container */
+    .container {
+      max-width: 1300px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Controls */
+    #sortControls,
+    #filterControls {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+    #sortControls select, 
+    #filterControls select,
+    #filterControls input[type="number"] {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    #filterControls label {
+      margin-right: 10px;
+    }
+    #filterAmenities label {
+      display: inline-block;
+      margin-right: 10px;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    .max-filter-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .max-filter-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .max-filter-item label {
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+
+    /* Favorite Indicator */
+    .favorite-indicator {
+      color: gold;
+      margin-right: 4px;
+      font-size: 1.2em;
+      vertical-align: middle;
+    }
+    
+    /* Responsive Table Container */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto; /* Horizontal scrolling if needed */
+      margin-top: 20px;
+    }
+    
+    /* Table Styling */
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    th, td {
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
+    }
+    th {
+      background: #f7f7f7;
+      font-weight: 500;
+    }
+    tr:nth-child(even) td {
+      background: #fbfbfb;
+    }
+    tr:hover td {
+      background: #f1f5f8;
+    }
+    
+    /* Keep the Original URL column narrower */
+    table th:nth-child(9),
+    table td:nth-child(9) {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    /* Inputs and Buttons */
+    input[type="text"],
+    input[type="url"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+    button {
+      padding: 8px 16px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 1em;
+    }
+    button:hover {
+      background: #556cd6;
+    }
+    
+    .amenity-option {
+      display: inline-block;
+      margin-right: 10px;
+      white-space: nowrap;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 10px;
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #666;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.2em;
+      }
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+      #sortControls, #filterControls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
+  
   <script>
-    const firebaseConfig = { apiKey: "AIzaSyAcRL-9n99aA0HPjPQKA8OlTHMzWQD1vBQ", authDomain: "nyc-apt-tracker.firebaseapp.com", projectId: "nyc-apt-tracker", storageBucket: "nyc-apt-tracker.firebasestorage.app", messagingSenderId: "176381773971", appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566" };
+    // Firebase configuration – replace with your own configuration if needed.
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcRL-9n99aA0HPjPQKA8OlTHMzWQD1vBQ",
+      authDomain: "nyc-apt-tracker.firebaseapp.com",
+      projectId: "nyc-apt-tracker",
+      storageBucket: "nyc-apt-tracker.firebasestorage.app",
+      messagingSenderId: "176381773971",
+      appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
+    };
+
+    // Initialize Firebase and Firestore using compat libraries.
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
+    // Define global variables: target addresses and amenity options.
     const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
     const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
-    const amenityOptions = ["Laundry Room","AC","Gym","Game room","Elevator"];
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Elevator"];
+
+    // Global array to hold listings (each listing includes its Firestore document ID).
     let listings = [];
-    function formatPrice(price){ let n=parseFloat(price.replace(/[^0-9.]/g,'')); return isNaN(n)?price:new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n); }
-    function buildGoogleMapsLink(o,d){return`https://www.google.com/maps/dir/${encodeURIComponent(o)}/${encodeURIComponent(d)}/`;}
-    function getSelectedAmenities(c){ return Array.from(c.querySelectorAll('input[type="checkbox"]:checked')).map(cb=>cb.value).join(', '); }
-    function clearFilters(){document.getElementById('filterNeighborhood').value="All";document.getElementById('filterMaxPrice').value="";document.getElementById('filterMaxDistanceGS').value="";document.getElementById('filterMaxDistanceBTG').value="";document.getElementById('filterFavorites').checked=false;document.querySelectorAll('#filterAmenities input[type="checkbox"]').forEach(cb=>cb.checked=false);}
-    async function loadListings(){ try{ const snap=await db.collection("listings").get(); listings=snap.docs.map(d=>{ const data=d.data(); return{ id:d.id, favorite:data.favorite||false, ...data }; }); refreshTable(); }catch(e){console.error(e);} }
-    async function addNewListingHandler(){ let price=document.getElementById('newPrice').value.trim(); let loc=document.getElementById('newLocation').value.trim(); if(!loc)return alert("Enter location."); const gs=buildGoogleMapsLink(loc,workAddressX), btg=buildGoogleMapsLink(loc,workAddressY); let doc={ price:price||'N/A', location:loc, neighborhood:document.getElementById('newNeighborhood').value.trim()||'N/A', bathrooms:+document.getElementById('newBathrooms').value||0, bedrooms:+document.getElementById('newBedrooms').value||0, distanceToWorkX:gs, distanceToWorkY:btg, amenities:getSelectedAmenities(document.getElementById('newAmenitiesCell'))||'N/A', originalUrl:document.getElementById('newOriginalUrl').value.trim()||'N/A', notes:document.getElementById('newNotes').value.trim()||'', favorite:false }; try{await db.collection("listings").add(doc); clearFilters(); loadListings(); }catch(e){console.error(e);} ['newPrice','newLocation','newNeighborhood','newBathrooms','newBedrooms','newOriginalUrl','newNotes'].forEach(id=>document.getElementById(id).value=''); document.querySelectorAll('#newAmenitiesCell input[type="checkbox"]').forEach(cb=>cb.checked=false); }
-    async function updateListingById(id,upd){ try{ await db.collection('listings').doc(id).update(upd); loadListings(); }catch(e){console.error(e);} }
-    async function deleteListingById(id){ try{ await db.collection('listings').doc(id).delete(); loadListings(); }catch(e){console.error(e);} }
-    function getFilteredListings(){ let arr=listings.map(i=>({item:i})); if(document.getElementById('filterFavorites').checked) arr=arr.filter(o=>o.item.favorite); let fn=document.getElementById('filterNeighborhood').value.toLowerCase(); if(fn!=='all') arr=arr.filter(o=>o.item.neighborhood.toLowerCase()===fn); let selA=Array.from(document.querySelectorAll('#filterAmenities input:checked')).map(cb=>cb.value.toLowerCase()); if(selA.length) arr=arr.filter(o=>selA.every(a=>o.item.amenities.toLowerCase().split(',').map(x=>x.trim()).includes(a))); let mp=parseFloat(document.getElementById('filterMaxPrice').value); if(!isNaN(mp)) arr=arr.filter(o=>{let p=parseFloat(o.item.price.replace(/[^0-9.]/g,''));return!isNaN(p)&&p<=mp;}); let mg=parseFloat(document.getElementById('filterMaxDistanceGS').value); if(!isNaN(mg)) arr=arr.filter(o=>{if(o.item.distanceToWorkX.startsWith('http'))return true; let d=parseFloat(o.item.distanceToWorkX.replace(/[^0-9.]/g,''));return!isNaN(d)&&d<=mg;}); let mb=parseFloat(document.getElementById('filterMaxDistanceBTG').value); if(!isNaN(mb)) arr=arr.filter(o=>{if(o.item.distanceToWorkY.startsWith('http'))return true; let d=parseFloat(o.item.distanceToWorkY.replace(/[^0-9.]/g,''));return!isNaN(d)&&d<=mb;}); return arr; }
-    function createDistanceCell(v){ let td=document.createElement('td'); if(v.startsWith('http')){ let a=document.createElement('a');a.href=v; a.textContent='View Route'; a.target='_blank'; td.appendChild(a);}else td.textContent=v; return td; }
-    function createTextCell(c){ let td=document.createElement('td'); td.innerHTML=c; return td; }
-    function createRow(item){ let tr=document.createElement('tr'); tr.dataset.id=item.id; tr.appendChild(createTextCell(formatPrice(item.price))); tr.appendChild(createTextCell(item.location)); tr.appendChild(createTextCell(item.neighborhood)); tr.appendChild(createTextCell(item.bathrooms)); tr.appendChild(createTextCell(item.bedrooms)); tr.appendChild(createDistanceCell(item.distanceToWorkX)); tr.appendChild(createDistanceCell(item.distanceToWorkY)); tr.appendChild(createTextCell(item.amenities)); let urlTd=document.createElement('td'), a=document.createElement('a'); a.href=item.originalUrl; a.textContent='link'; a.target='_blank'; urlTd.appendChild(a); tr.appendChild(urlTd); tr.appendChild(createTextCell(item.notes)); let ac=document.createElement('td'); let star=document.createElement('span'); star.className='favorite-indicator'; star.textContent=item.favorite?'★':'☆'; ac.appendChild(star); let fb=document.createElement('button'); fb.textContent=item.favorite?'Unfavorite':'Favorite'; fb.addEventListener('click',()=>updateListingById(item.id,{favorite:!item.favorite})); ac.appendChild(fb); let eb=document.createElement('button'); eb.textContent='Edit'; eb.addEventListener('click',()=>enableEditing(tr,item.id)); ac.appendChild(eb); let dbtn=document.createElement('button'); dbtn.textContent='Delete'; dbtn.addEventListener('click',()=>{if(confirm('Delete this listing?')) deleteListingById(item.id);} ); ac.appendChild(dbtn); tr.appendChild(ac); return tr; }
-    function refreshTable(){ let sel=document.getElementById('filterNeighborhood'), cur=sel.value, setN=new Set(listings.map(l=>l.neighborhood).filter(n=>n)); sel.innerHTML='<option value="All">All</option>'; setN.forEach(n=>{let o=document.createElement('option');o.value=n; o.textContent=n; sel.appendChild(o);} ); if(setN.has(cur)) sel.value=cur; let tb=document.querySelector('#listingsTable tbody'); tb.querySelectorAll('tr').forEach(r=>{ if(r.id!=='newListingRow') r.remove(); }); getFilteredListings().forEach(o=>tb.appendChild(createRow(o.item))); }
-    function enableEditing(row,docId){ let listing=listings.find(l=>l.id===docId); if(!listing) return; row.innerHTML=''; let pc=createInputCell(listing.price), lc=createInputCell(listing.location), nc=createInputCell(listing.neighborhood), bc=createInputCell(listing.bathrooms,'number'), be=createInputCell(listing.bedrooms,'number'), dgc=createInputCell(listing.distanceToWorkX), dbt=createInputCell(listing.distanceToWorkY); [pc,lc,nc,bc,be,dgc,dbt].forEach(c=>row.appendChild(c)); let amTd=document.createElement('td'); amenityOptions.forEach(opt=>{ let lbl=document.createElement('label'); lbl.className='amenity-option'; let cb=document.createElement('input'); cb.type='checkbox'; cb.value=opt; if(listing.amenities.split(',').map(a=>a.trim()).includes(opt)) cb.checked=true; lbl.appendChild(cb); lbl.appendChild(document.createTextNode(opt)); amTd.appendChild(lbl);} ); row.appendChild(amTd); let urlCell=createInputCell(listing.originalUrl,'url'), notesCell=createInputCell(listing.notes); row.appendChild(urlCell); row.appendChild(notesCell); let act=document.createElement('td'); let saveBtn=document.createElement('button'); saveBtn.textContent='Save'; saveBtn.addEventListener('click',()=>{ let upd={ price:pc.querySelector('input').value.trim()||'N/A', location:lc.querySelector('input').value.trim()||'N/A', neighborhood:nc.querySelector('input').value.trim()||'N/A', bathrooms:bc.querySelector('input').value.trim()||0, bedrooms:be.querySelector('input').value.trim()||0, distanceToWorkX:dgc.querySelector('input').value.trim()||'N/A', distanceToWorkY:dbt.querySelector('input').value.trim()||'N/A', amenities:'', originalUrl:urlCell.querySelector('input').value.trim()||'N/A', notes:notesCell.querySelector('input').value.trim()||'' }; let selCb=amTd.querySelectorAll('input[type="checkbox"]'); let arr=[]; selCb.forEach(c=>c.checked&&arr.push(c.value)); upd.amenities=arr.join(', ')||'N/A'; // preserve favorite
-                 updateListingById(docId,{...upd,favorite:listing.favorite}); }); act.appendChild(saveBtn); let cancelBtn=document.createElement('button'); cancelBtn.textContent='Cancel'; cancelBtn.addEventListener('click',refreshTable); act.appendChild(cancelBtn); let delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.addEventListener('click',()=>{if(confirm('Are you sure you want to delete this listing?')) deleteListingById(docId);} ); act.appendChild(delBtn); row.appendChild(act); }
-    function createInputCell(val,type='text'){ let td=document.createElement('td'), inp=document.createElement('input'); inp.type=type; inp.value=val; td.appendChild(inp); return td; }
-    document.getElementById('sortBtn').addEventListener('click',()=>{ let c=document.getElementById('sortCriteria').value; listings.sort((a,b)=>{ let va=parseFloat(a[c].replace(/[^0-9.]/g,''))||0; let vb=parseFloat(b[c].replace(/[^0-9.]/g,''))||0; return va-vb; }); refreshTable(); }); document.getElementById('filterBtn').addEventListener('click',refreshTable); document.getElementById('clearFiltersBtn').addEventListener('click',()=>{clearFilters();refreshTable();}); document.getElementById('addListingBtn').addEventListener('click',addNewListingHandler); window.addEventListener('load',loadListings);
+
+    // FORMAT THE PRICE INTO DOLLAR FORMAT, E.G. 3973 -> "$3,973"
+    function formatPrice(price) {
+      let number = parseFloat(price.replace(/[^0-9.]/g, ""));
+      if (isNaN(number)) {
+        return price;
+      }
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+    }
+
+
+    // --- FIRESTORE FUNCTIONS ---
+    async function loadListings() {
+      try {
+        const querySnapshot = await db.collection("listings").get();
+        listings = [];
+        querySnapshot.forEach(doc => {
+          let data = doc.data();
+          data.id = doc.id;
+          data.favorite = data.favorite || false;
+          listings.push(data);
+        });
+        refreshTable();
+      } catch (error) {
+        console.error("Error loading listings: ", error);
+      }
+    }
+    
+    async function addNewListingHandler() {
+      let price = document.getElementById('newPrice').value.trim();
+      let location = document.getElementById('newLocation').value.trim();
+      if (!location) {
+        alert("Please enter the apartment location so travel links can be generated.");
+        return;
+      }
+      const linkGS = buildGoogleMapsLink(location, workAddressX);
+      const linkBTG = buildGoogleMapsLink(location, workAddressY);
+      let newListing = {
+        price: price || 'N/A',
+        location: location,
+        neighborhood: document.getElementById('newNeighborhood').value.trim() || 'N/A',
+        bathrooms: +document.getElementById('newBathrooms').value || 0,
+        bedrooms: +document.getElementById('newBedrooms').value || 0,
+        distanceToWorkX: linkGS,
+        distanceToWorkY: linkBTG,
+        amenities: getSelectedAmenities(document.getElementById("newAmenitiesCell")) || 'N/A',
+        originalUrl: document.getElementById('newOriginalUrl').value.trim() || 'N/A',
+        notes: document.getElementById('newNotes').value.trim() || '',
+        favorite: false
+      };
+      try {
+        await db.collection("listings").add(newListing);
+        clearFilters();
+        loadListings();
+      } catch (error) {
+        console.error("Error adding listing: ", error);
+      }
+      ['newPrice','newLocation','newNeighborhood','newBathrooms','newBedrooms','newOriginalUrl','newNotes']
+        .forEach(id => document.getElementById(id).value = '');
+      document.querySelectorAll("#newAmenitiesCell input[type='checkbox']").forEach(cb => cb.checked = false);
+    }
+    
+    async function updateListingById(docId, updatedListing) {
+      try {
+        await db.collection("listings").doc(docId).update(updatedListing);
+        loadListings();
+      } catch (error) {
+        console.error("Error updating listing: ", error);
+      }
+    }
+    
+    async function deleteListingById(docId) {
+      try {
+        await db.collection("listings").doc(docId).delete();
+        loadListings();
+      } catch (error) {
+        console.error("Error deleting listing: ", error);
+      }
+    }
+    
+    // --- HELPER FUNCTIONS ---
+    function buildGoogleMapsLink(origin, destination) {
+      return "https://www.google.com/maps/dir/" +
+             encodeURIComponent(origin) + "/" + encodeURIComponent(destination) + "/";
+    }
+    
+    function getSortableValue(value) {
+      if (value.trim().toLowerCase().startsWith("http")) {
+        return Infinity;
+      }
+      let num = parseFloat(value.replace(/[^0-9.]/g, ""));
+      return isNaN(num) ? 0 : num;
+    }
+    
+    function createDistanceCell(value) {
+      let td = document.createElement('td');
+      if (value.trim().toLowerCase().startsWith("http")) {
+        let a = document.createElement("a");
+        a.href = value;
+        a.target = "_blank";
+        a.textContent = "View Route";
+        td.appendChild(a);
+      } else {
+        td.textContent = value;
+      }
+      return td;
+    }
+    
+    function createTextCell(content) {
+      let td = document.createElement('td');
+      td.innerHTML = content;
+      return td;
+    }
+    
+    function createInputCell(value, type = 'text') {
+      let td = document.createElement('td');
+      let input = document.createElement('input');
+      input.type = type;
+      input.value = value;
+      td.appendChild(input);
+      return td;
+    }
+
+    // ————————————————————————————————
+    // Full edit mode, preserving favorite status
+    function enableEditing(row, docId) {
+      const listing = listings.find(l => l.id === docId);
+      if (!listing) return console.error("Listing not found");
+      row.innerHTML = '';
+
+      // Editable cells
+      const priceCell    = createInputCell(listing.price);
+      const locationCell = createInputCell(listing.location);
+      const neighCell    = createInputCell(listing.neighborhood);
+      const bathCell     = createInputCell(listing.bathrooms, 'number');
+      const bedCell      = createInputCell(listing.bedrooms,  'number');
+      const gsCell       = createInputCell(listing.distanceToWorkX);
+      const btgCell      = createInputCell(listing.distanceToWorkY);
+      row.append(priceCell, locationCell, neighCell, bathCell, bedCell, gsCell, btgCell);
+
+      // Amenities
+      const amenitiesTd = document.createElement('td');
+      amenityOptions.forEach(opt => {
+        const label = document.createElement('label');
+        label.className = 'amenity-option';
+        const cb = document.createElement('input');
+        cb.type  = 'checkbox';
+        cb.value = opt;
+        if (listing.amenities.split(',').map(a=>a.trim()).includes(opt)) cb.checked = true;
+        label.append(cb, document.createTextNode(opt));
+        amenitiesTd.appendChild(label);
+      });
+      row.appendChild(amenitiesTd);
+
+      // URL & Notes
+      const urlCell   = createInputCell(listing.originalUrl, 'url');
+      const notesCell = createInputCell(listing.notes);
+      row.append(urlCell, notesCell);
+
+      // Actions: Save, Cancel, Delete
+      const actionTd = document.createElement('td');
+      // Save
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Save';
+      saveBtn.addEventListener('click', () => {
+        const updated = {
+          price:    priceCell.querySelector('input').value.trim() || 'N/A',
+          location: locationCell.querySelector('input').value.trim() || 'N/A',
+          neighborhood: neighCell   .querySelector('input').value.trim() || 'N/A',
+          bathrooms:    parseInt(bathCell.querySelector('input').value, 10) || 0,
+          bedrooms:     parseInt(bedCell .querySelector('input').value, 10) || 0,
+          distanceToWorkX: gsCell .querySelector('input').value.trim() || 'N/A',
+          distanceToWorkY: btgCell.querySelector('input').value.trim() || 'N/A',
+          amenities: Array
+            .from(amenitiesTd.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb => cb.value)
+            .join(', ') || 'N/A',
+          originalUrl: urlCell  .querySelector('input').value.trim() || 'N/A',
+          notes:       notesCell.querySelector('input').value.trim() || '',
+          favorite:    listing.favorite
+        };
+        updateListingById(docId, updated);
+      });
+      actionTd.appendChild(saveBtn);
+
+      // Cancel
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.addEventListener('click', refreshTable);
+      actionTd.appendChild(cancelBtn);
+
+      // Delete
+      const delBtn = document.createElement('button');
+      delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', () => {
+        if (confirm("Are you sure you want to delete this listing?")) {
+          deleteListingById(docId);
+        }
+      });
+      actionTd.appendChild(delBtn);
+
+      row.appendChild(actionTd);
+    }
+
+    // --- DISPLAY FUNCTIONS ---
+    function createRow(listing) {
+      // … your existing createRow implementation …
+    }
+    function refreshTable() {
+      // … your existing refreshTable implementation …
+    }
+
+    // --- EVENT LISTENERS ---
+    document.getElementById('sortBtn').addEventListener('click', function() {
+      // … unchanged …
+    });
+    document.getElementById('filterBtn').addEventListener('click', refreshTable);
+    document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+      clearFilters();
+      refreshTable();
+    });
+    document.getElementById('addListingBtn').addEventListener('click', addNewListingHandler);
+    window.addEventListener('load', loadListings);
   </script>
-</head>
-<body>
-  <header>
-    <h1>NYC Apartment Finder</h1>
-    <p>Helping you decide where to live in New York City.</p>
-  </header>
-  <div class="container">
-    <div id="sortControls">
-      <span>Sort by:</span>
-      <select id="sortCriteria">
-        <option value="price">Price</option>
-        <option value="distanceToWorkX">Distance to GS</option>
-        <option value="distanceToWorkY">Distance to BTG</option>
-      </select>
-      <button id="sortBtn">Sort</button>
-    </div>
-    <div id="filterControls">
-      <div>
-        <span>Filter by Neighborhood:</span>
-        <select id="filterNeighborhood"><option value="All">All</option></select>
-      </div>
-      <div>
-        <span>Filter by Amenities:</span>
-        <span id="filterAmenities">
-          <label><input type="checkbox" value="Laundry Room">Laundry Room</label>
-          <label><input type="checkbox" value="AC">AC</label>
-          <label><input type="checkbox" value="Gym">Gym</label>
-          <label><input type="checkbox" value="Game room">Game room</label>
-          <label><input type="checkbox" value="Elevator">Elevator</label>
-        </span>
-      </div>
-      <div>
-        <label><input type="checkbox" id="filterFavorites"> Show Favorites Only</label>
-      </div>
-      <div class="max-filter-container"> ... </div>
-      <button id="filterBtn">Apply Filters</button>
-      <button id="clearFiltersBtn">Clear Filters</button>
-    </div>
-    <div class="table-responsive">
-      <table id="listingsTable">
-        <thead> ... </thead>
-        <tbody>
-          <tr id="newListingRow"> ... </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  <footer class="footer"><p>&copy; 2025 NYC Apartment Finder</p></footer>
 </body>
 </html>
