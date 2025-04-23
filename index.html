@@ -1,4 +1,3 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +13,89 @@
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
   
   <style>
-    /* … all existing styles … */
+    /* Global Styles */
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+      color: #333;
+      line-height: 1.6;
+    }
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Header Styles */
+    header {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      padding: 40px 20px;
+      text-align: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2.8em;
+      letter-spacing: 1px;
+    }
+    header p {
+      margin: 8px 0 0;
+      font-size: 1.2em;
+    }
+    
+    /* Container */
+    .container {
+      max-width: 1300px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    /* Controls */
+    #sortControls,
+    #filterControls {
+      margin-bottom: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: center;
+    }
+    #sortControls select, 
+    #filterControls select,
+    #filterControls input[type="number"] {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    #filterControls label {
+      margin-right: 10px;
+    }
+    #filterAmenities label {
+      display: inline-block;
+      margin-right: 10px;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+    .max-filter-container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .max-filter-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .max-filter-item label {
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
 
     /* Favorite Indicator */
     .favorite-indicator {
@@ -23,112 +104,138 @@
       font-size: 1.2em;
       vertical-align: middle;
     }
+    
+    /* Responsive Table Container */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto; /* Horizontal scrolling if needed */
+      margin-top: 20px;
+    }
+    
+    /* Table Styling */
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    th, td {
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: middle;
+    }
+    th {
+      background: #f7f7f7;
+      font-weight: 500;
+    }
+    tr:nth-child(even) td {
+      background: #fbfbfb;
+    }
+    tr:hover td {
+      background: #f1f5f8;
+    }
+    
+    /* Keep the Original URL column narrower */
+    table th:nth-child(9),
+    table td:nth-child(9) {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    /* Inputs and Buttons */
+    input[type="text"],
+    input[type="url"],
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+    button {
+      padding: 8px 16px;
+      background: #667eea;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      font-size: 1em;
+    }
+    button:hover {
+      background: #556cd6;
+    }
+    
+    .amenity-option {
+      display: inline-block;
+      margin-right: 10px;
+      white-space: nowrap;
+    }
+    
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 10px;
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #666;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 2.2em;
+      }
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+      #sortControls, #filterControls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
   </style>
+  
+  <script>
+    // Firebase configuration – replace with your own configuration if needed.
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcRL-9n99aA0HPjPQKA8OlTHMzWQD1vBQ",
+      authDomain: "nyc-apt-tracker.firebaseapp.com",
+      projectId: "nyc-apt-tracker",
+      storageBucket: "nyc-apt-tracker.firebasestorage.app",
+      messagingSenderId: "176381773971",
+      appId: "1:176381773971:web:2ad0ce9e11f6a6667ae566"
+    };
+
+    // Initialize Firebase and Firestore using compat libraries.
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Define global variables: target addresses and amenity options.
+    const workAddressX = "Goldman Sachs Headquarters, 200 West St, New York, NY";
+    const workAddressY = "Btg Pactual, 601 Lexington Ave #57, New York, NY";
+    const amenityOptions = ["Laundry Room", "AC", "Gym", "Game room", "Elevator"];
+
+    // Global array to hold listings (each listing includes its Firestore document ID).
+    let listings = [];
+
+    // FORMAT THE PRICE INTO DOLLAR FORMAT, E.G. 3973 -> "$3,973"
+    function formatPrice(price) {
+      let number = parseFloat(price.replace(/[^0-9.]/g, ""));
+      if (isNaN(number)) {
+        return price;
+      }
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(number);
+    }
+  </script>
 </head>
 <body>
   <header>
-    <h1>NYC Apartment Finder</h1>
-    <p>Helping you decide where to live in New York City.</p>
-  </header>
-  <div class="container">
-    <!-- Sort Controls -->
-    <div id="sortControls">
-      <span>Sort by:</span>
-      <select id="sortCriteria">
-        <option value="price">Price</option>
-        <option value="distanceToWorkX">Distance to GS</option>
-        <option value="distanceToWorkY">Distance to BTG</option>
-      </select>
-      <button id="sortBtn">Sort</button>
-    </div>
-    
-    <!-- Filter Controls -->
-    <div id="filterControls">
-      <div>
-        <span>Filter by Neighborhood:</span>
-        <select id="filterNeighborhood">
-          <option value="All">All</option>
-        </select>
-      </div>
-      <div>
-        <span>Filter by Amenities:</span>
-        <span id="filterAmenities">
-          <label><input type="checkbox" value="Laundry Room">Laundry Room</label>
-          <label><input type="checkbox" value="AC">AC</label>
-          <label><input type="checkbox" value="Gym">Gym</label>
-          <label><input type="checkbox" value="Game room">Game room</label>
-          <label><input type="checkbox" value="Elevator">Elevator</label>
-        </span>
-      </div>
-      <div>
-        <label><input type="checkbox" id="filterFavorites"> Show Favorites Only</label>
-      </div>
-      <div class="max-filter-container">
-        <div class="max-filter-item">
-          <label for="filterMaxPrice">Max Price:</label>
-          <input type="number" id="filterMaxPrice" min="0" placeholder="Any">
-        </div>
-        <div class="max-filter-item">
-          <label for="filterMaxDistanceGS">Max Distance to GS:</label>
-          <input type="number" id="filterMaxDistanceGS" min="0" placeholder="Any">
-        </div>
-        <div class="max-filter-item">
-          <label for="filterMaxDistanceBTG">Max Distance to BTG:</label>
-          <input type="number" id="filterMaxDistanceBTG" min="0" placeholder="Any">
-        </div>
-      </div>
-      <button id="filterBtn">Apply Filters</button>
-      <button id="clearFiltersBtn">Clear Filters</button>
-    </div>
-    
-    <!-- Table -->
-    <div class="table-responsive">
-      <table id="listingsTable">
-        <thead>
-          <tr>
-            <th>Price</th>
-            <th>Location</th>
-            <th>Neighborhood</th>
-            <th>Bathrooms</th>
-            <th>Bedrooms</th>
-            <th>Distance to GS</th>
-            <th>Distance to BTG</th>
-            <th>Amenities</th>
-            <th>Original URL</th>
-            <th>Notes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr id="newListingRow">
-            <td><input type="text" id="newPrice" placeholder="Price"></td>
-            <td><input type="text" id="newLocation" placeholder="Location"></td>
-            <td><input type="text" id="newNeighborhood" placeholder="Neighborhood"></td>
-            <td><input type="number" id="newBathrooms" placeholder="Bathrooms"></td>
-            <td><input type="number" id="newBedrooms" placeholder="Bedrooms"></td>
-            <td>Auto-generated</td>
-            <td>Auto-generated</td>
-            <td id="newAmenitiesCell">
-              <label class="amenity-option"><input type="checkbox" value="Laundry Room">Laundry Room</label>
-              <label class="amenity-option"><input type="checkbox" value="AC">AC</label>
-              <label class="amenity-option"><input type="checkbox" value="Gym">Gym</label>
-              <label class="amenity-option"><input type="checkbox" value="Game room">Game room</label>
-              <label class="amenity-option"><input type="checkbox" value="Elevator">Elevator</label>
-            </td>
-            <td><input type="url" id="newOriginalUrl" placeholder="Original URL"></td>
-            <td><input type="text" id="newNotes" placeholder="Notes"></td>
-            <td><button id="addListingBtn">Add</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-  
-  <footer class="footer">
-    <p>&copy; 2025 NYC Apartment Finder</p>
-  </footer>
-
-  <!-- Main JS -->
-  <script src="script.js"></script>
-</body>
-</html>
+    <h1>NYC Apartment Finder
