@@ -14,32 +14,68 @@
   <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore-compat.js"></script>
   
   <style>
-    /* ... your existing styles ... */
-    /* Highlight favorited rows */
-    tr.favorited td {
-      background: #fffbe6 !important;
-    }
-    .star-indicator {
-      font-size: 1.2em;
+    /* … all existing styles … */
+
+    /* Favorite Indicator */
+    .favorite-indicator {
       color: gold;
-      text-align: center;
+      margin-right: 4px;
+      font-size: 1.2em;
+      vertical-align: middle;
     }
   </style>
 </head>
 <body>
-  <header>…</header>
+  <header>
+    <h1>NYC Apartment Finder</h1>
+    <p>Helping you decide where to live in New York City.</p>
+  </header>
   <div class="container">
     <!-- Sort Controls -->
-    <div id="sortControls">…</div>
+    <div id="sortControls">
+      <span>Sort by:</span>
+      <select id="sortCriteria">
+        <option value="price">Price</option>
+        <option value="distanceToWorkX">Distance to GS</option>
+        <option value="distanceToWorkY">Distance to BTG</option>
+      </select>
+      <button id="sortBtn">Sort</button>
+    </div>
     
     <!-- Filter Controls -->
     <div id="filterControls">
-      <!-- existing filters… -->
       <div>
-        <label>
-          <input type="checkbox" id="filterFavoritesOnly">
-          Show Favorites Only
-        </label>
+        <span>Filter by Neighborhood:</span>
+        <select id="filterNeighborhood">
+          <option value="All">All</option>
+        </select>
+      </div>
+      <div>
+        <span>Filter by Amenities:</span>
+        <span id="filterAmenities">
+          <label><input type="checkbox" value="Laundry Room">Laundry Room</label>
+          <label><input type="checkbox" value="AC">AC</label>
+          <label><input type="checkbox" value="Gym">Gym</label>
+          <label><input type="checkbox" value="Game room">Game room</label>
+          <label><input type="checkbox" value="Elevator">Elevator</label>
+        </span>
+      </div>
+      <div>
+        <label><input type="checkbox" id="filterFavorites"> Show Favorites Only</label>
+      </div>
+      <div class="max-filter-container">
+        <div class="max-filter-item">
+          <label for="filterMaxPrice">Max Price:</label>
+          <input type="number" id="filterMaxPrice" min="0" placeholder="Any">
+        </div>
+        <div class="max-filter-item">
+          <label for="filterMaxDistanceGS">Max Distance to GS:</label>
+          <input type="number" id="filterMaxDistanceGS" min="0" placeholder="Any">
+        </div>
+        <div class="max-filter-item">
+          <label for="filterMaxDistanceBTG">Max Distance to BTG:</label>
+          <input type="number" id="filterMaxDistanceBTG" min="0" placeholder="Any">
+        </div>
       </div>
       <button id="filterBtn">Apply Filters</button>
       <button id="clearFiltersBtn">Clear Filters</button>
@@ -60,173 +96,39 @@
             <th>Amenities</th>
             <th>Original URL</th>
             <th>Notes</th>
-            <th>Favorite</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <!-- New Listing Input Row -->
           <tr id="newListingRow">
-            <!-- … your existing inputs up to Notes … -->
+            <td><input type="text" id="newPrice" placeholder="Price"></td>
+            <td><input type="text" id="newLocation" placeholder="Location"></td>
+            <td><input type="text" id="newNeighborhood" placeholder="Neighborhood"></td>
+            <td><input type="number" id="newBathrooms" placeholder="Bathrooms"></td>
+            <td><input type="number" id="newBedrooms" placeholder="Bedrooms"></td>
+            <td>Auto-generated</td>
+            <td>Auto-generated</td>
+            <td id="newAmenitiesCell">
+              <label class="amenity-option"><input type="checkbox" value="Laundry Room">Laundry Room</label>
+              <label class="amenity-option"><input type="checkbox" value="AC">AC</label>
+              <label class="amenity-option"><input type="checkbox" value="Gym">Gym</label>
+              <label class="amenity-option"><input type="checkbox" value="Game room">Game room</label>
+              <label class="amenity-option"><input type="checkbox" value="Elevator">Elevator</label>
+            </td>
+            <td><input type="url" id="newOriginalUrl" placeholder="Original URL"></td>
             <td><input type="text" id="newNotes" placeholder="Notes"></td>
-            <td></td> <!-- placeholder for Favorite column -->
             <td><button id="addListingBtn">Add</button></td>
           </tr>
-          <!-- Existing listings go here -->
         </tbody>
       </table>
     </div>
   </div>
-  <footer>…</footer>
   
-  <script>
-    // --- FIRESTORE SETUP ---
-    const firebaseConfig = { /* your config */ };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const workAddressX = "...";
-    const workAddressY = "...";
-    const amenityOptions = ["Laundry Room","AC","Gym","Game room","Elevator"];
-    let listings = [];
-    
-    function formatPrice(price) { /* … */ }
-    function buildGoogleMapsLink(o,d){/* … */} 
-    function getSelectedAmenities(container){/* … */} 
-    function getSortableValue(v){/* … */} 
-    function createDistanceCell(v){/* … */} 
-    function createTextCell(c){let td=document.createElement('td');td.innerHTML=c;return td;}
-    function createInputCell(v,t='text'){/* … */} 
-    
-    // --- LOAD & REFRESH ---
-    async function loadListings() {
-      const snap = await db.collection("listings").get();
-      listings = [];
-      snap.forEach(doc => {
-        let data = doc.data();
-        data.id = doc.id;
-        if (data.favorite === undefined) data.favorite = false;
-        listings.push(data);
-      });
-      refreshTable();
-    }
-    
-    function updateNeighborhoodFilterOptions() { /* … */ }
-    
-    function getFilteredListings() {
-      let arr = listings.map((item,idx)=>({item,idx}));
-      // … existing neighborhood, amenity, max filters …
-      if (document.getElementById('filterFavoritesOnly').checked) {
-        arr = arr.filter(obj => obj.item.favorite);
-      }
-      return arr;
-    }
-    
-    function createRow(listing) {
-      let tr = document.createElement('tr');
-      tr.setAttribute('data-id', listing.id);
-      if (listing.favorite) tr.classList.add('favorited');
-      
-      tr.appendChild(createTextCell(formatPrice(listing.price)));
-      tr.appendChild(createTextCell(listing.location));
-      tr.appendChild(createTextCell(listing.neighborhood));
-      tr.appendChild(createTextCell(listing.bathrooms));
-      tr.appendChild(createTextCell(listing.bedrooms));
-      tr.appendChild(createDistanceCell(listing.distanceToWorkX));
-      tr.appendChild(createDistanceCell(listing.distanceToWorkY));
-      tr.appendChild(createTextCell(listing.amenities));
-      
-      // Original URL
-      let urlTd = document.createElement('td');
-      let a = document.createElement('a');
-      a.href = listing.originalUrl; a.textContent = "link"; a.target="_blank";
-      urlTd.appendChild(a);
-      tr.appendChild(urlTd);
-      
-      tr.appendChild(createTextCell(listing.notes));
-      
-      // Favorite indicator
-      let favTd = document.createElement('td');
-      favTd.className = 'star-indicator';
-      favTd.textContent = listing.favorite ? '★' : '';
-      tr.appendChild(favTd);
-      
-      // Actions
-      let actionTd = document.createElement('td');
-      let editBtn = document.createElement('button');
-      editBtn.textContent = 'Edit';
-      editBtn.addEventListener('click', ()=>enableEditing(tr, listing.id));
-      actionTd.appendChild(editBtn);
-      
-      let deleteBtn = document.createElement('button');
-      deleteBtn.textContent = 'Delete';
-      deleteBtn.addEventListener('click', ()=>{
-        if(confirm("Delete this listing?")) deleteListingById(listing.id);
-      });
-      actionTd.appendChild(deleteBtn);
-      
-      // Favorite toggle
-      let favBtn = document.createElement('button');
-      favBtn.textContent = listing.favorite ? 'Unfavorite' : 'Favorite';
-      favBtn.addEventListener('click', ()=>{
-        toggleFavorite(listing.id, listing.favorite);
-      });
-      actionTd.appendChild(favBtn);
-      
-      tr.appendChild(actionTd);
-      return tr;
-    }
-    
-    function refreshTable() {
-      updateNeighborhoodFilterOptions();
-      const tbody = document.querySelector('#listingsTable tbody');
-      Array.from(tbody.querySelectorAll('tr')).forEach(r=>{
-        if(r.id!=='newListingRow') r.remove();
-      });
-      getFilteredListings().forEach(obj=>{
-        tbody.appendChild(createRow(obj.item, obj.idx));
-      });
-    }
-    
-    // --- ADD / UPDATE / DELETE ---
-    async function addNewListingHandler() {
-      // … gather inputs …
-      let newListing = {
-        price, location, neighborhood,
-        bathrooms, bedrooms,
-        distanceToWorkX: buildGoogleMapsLink(location, workAddressX),
-        distanceToWorkY: buildGoogleMapsLink(location, workAddressY),
-        amenities: getSelectedAmenities(document.getElementById("newAmenitiesCell")) || 'N/A',
-        originalUrl, notes,
-        favorite: false
-      };
-      await db.collection("listings").add(newListing);
-      clearAndReload();
-    }
-    
-    async function updateListingById(id, data) {
-      await db.collection("listings").doc(id).update(data);
-      loadListings();
-    }
-    async function deleteListingById(id) {
-      await db.collection("listings").doc(id).delete();
-      loadListings();
-    }
-    
-    function enableEditing(row, id) { /* … existing edit logic … */ }
-    
-    // --- EVENT BINDING ---
-    document.getElementById('sortBtn').addEventListener('click', ()=>{ /* … */ });
-    document.getElementById('filterBtn').addEventListener('click', refreshTable);
-    document.getElementById('clearFiltersBtn').addEventListener('click', ()=>{
-      // … clear all filters including favorites …
-      document.getElementById('filterFavoritesOnly').checked = false;
-      refreshTable();
-    });
-    document.getElementById('addListingBtn').addEventListener('click', addNewListingHandler);
-    window.addEventListener('load', loadListings);
-  </script>
-  
-  <!-- load your new favorites helper last -->
-  <script src="favorites.js"></script>
+  <footer class="footer">
+    <p>&copy; 2025 NYC Apartment Finder</p>
+  </footer>
+
+  <!-- Main JS -->
+  <script src="script.js"></script>
 </body>
 </html>
